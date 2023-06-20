@@ -25,6 +25,8 @@ from lsprotocol.types import (
 from platformdirs import user_cache_dir
 from pygls.server import LanguageServer
 
+from . import CACHE
+
 
 def check_extension(uri: str) -> Literal["install", "PKGBUILD", ""]:
     r"""Check extension.
@@ -79,6 +81,19 @@ def get_document(
     return document
 
 
+def get_packages() -> dict[str, str]:
+    r"""Get packages.
+
+    :rtype: dict[str, str]
+    """
+    try:
+        with open(CACHE, "r") as f:
+            packages = json.load(f)
+    except FileNotFoundError:
+        packages = {}
+    return packages
+
+
 class PKGBUILDLanguageServer(LanguageServer):
     r"""PKGBUILD language server."""
 
@@ -91,6 +106,7 @@ class PKGBUILDLanguageServer(LanguageServer):
         """
         super().__init__(*args)
         self.document = {}
+        self.packages = {}
 
         @self.feature(INITIALIZE)
         def initialize(params: InitializeParams) -> None:
@@ -103,6 +119,7 @@ class PKGBUILDLanguageServer(LanguageServer):
             opts = params.initialization_options
             method = getattr(opts, "method", "builtin")
             self.document = get_document(method)  # type: ignore
+            self.packages = get_packages()
 
         @self.feature(TEXT_DOCUMENT_HOVER)
         def hover(params: TextDocumentPositionParams) -> Hover | None:
@@ -118,10 +135,10 @@ class PKGBUILDLanguageServer(LanguageServer):
                 params.text_document.uri, params.position, True
             )
             if not word:
-                return None
+                return self.hover(params)
             result = self.document.get(word[0])
             if not result:
-                return None
+                return self.hover(params)
             doc = f"**{result[0]}**\n{result[1]}"
             return Hover(
                 contents=MarkupContent(kind=MarkupKind.Markdown, value=doc),
@@ -137,7 +154,7 @@ class PKGBUILDLanguageServer(LanguageServer):
             :rtype: CompletionList
             """
             word = self._cursor_word(
-                params.text_document.uri, params.position, False
+                params.text_document.uri, params.position, False, True
             )
             token = "" if word is None else word[0]
             items = [
@@ -151,6 +168,18 @@ class PKGBUILDLanguageServer(LanguageServer):
                 if x.startswith(token)
                 and self.document[x][2]
                 == check_extension(params.text_document.uri)
+            ]
+            items += [
+                CompletionItem(
+                    label=x,
+                    kind=CompletionItemKind.Module,
+                    documentation=MarkupContent(
+                        kind=MarkupKind.Markdown, value=self.packages[x]
+                    ),
+                    insert_text=x,
+                )
+                for x in self.packages
+                if x.startswith(token)
             ]
             return CompletionList(is_incomplete=False, items=items)
 
@@ -169,7 +198,11 @@ class PKGBUILDLanguageServer(LanguageServer):
         return str(line)
 
     def _cursor_word(
-        self, uri: str, position: Position, include_all: bool = True
+        self,
+        uri: str,
+        position: Position,
+        include_all: bool = True,
+        package_name: bool = False,
     ) -> Tuple[str, Range] | None:
         r"""Cursor word.
 
@@ -179,14 +212,19 @@ class PKGBUILDLanguageServer(LanguageServer):
         :type position: Position
         :param include_all:
         :type include_all: bool
+        :param package_name:
+        :type package_name: bool
         :rtype: Tuple[str, Range] | None
         """
-        if check_extension(uri) == "PKGBUILD":
-            # PKGBUILD contains package_XXX
-            pat = r"[a-z]+"
+        if package_name:
+            pat = r"[-0-9_a-z]+"
         else:
-            # *.install contains pre_install()
-            pat = r"[a-z_]+"
+            if check_extension(uri) == "PKGBUILD":
+                # PKGBUILD contains package_XXX
+                pat = r"[a-z]+"
+            else:
+                # *.install contains pre_install()
+                pat = r"[a-z_]+"
         line = self._cursor_line(uri, position)
         cursor = position.character
         for m in re.finditer(pat, line):
@@ -201,3 +239,23 @@ class PKGBUILDLanguageServer(LanguageServer):
                 )
                 return word
         return None
+
+    def hover(self, params: TextDocumentPositionParams) -> Hover | None:
+        r"""Hover.
+
+        :param params:
+        :type params: TextDocumentPositionParams
+        :rtype: Hover | None
+        """
+        word = self._cursor_word(
+            params.text_document.uri, params.position, True, True
+        )
+        if not word:
+            return None
+        doc = self.packages.get(word[0])
+        if not doc:
+            return None
+        return Hover(
+            contents=MarkupContent(kind=MarkupKind.Markdown, value=doc),
+            range=word[1],
+        )

@@ -3,6 +3,27 @@
 See customization in
 <https://pkgbuild-language-server.readthedocs.io/en/latest/api/pkgbuild-language-server.html#pkgbuild_language_server.server.get_document>.
 
+You can customize the document hover template. A default template is
+[here](https://github.com/Freed-Wu/pkgbuild-language-server/tree/main/src/pkgbuild_language_server/assets/jinja2/template.md.j2).
+The syntax rule is [jinja](https://docs.jinkan.org/docs/jinja2/templates.html).
+The template path is decided by your OS:
+
+```shell
+$ pkgbuild-language-server --print-config template
+/home/wzy/.config/pacman/template.md.j2
+```
+
+To complete package names, a cache is needed.
+Install [pyalpm](https://archlinux.org/packages/extra/x86_64/pyalpm)
+by `pip install 'pkgbuild-language-server[package]'` and then
+`pkgbuild-language-server --generate-cache`. Every time you change template,
+the cache must be regenerated.
+
+```shell
+$ pkgbuild-language-server --print-config cache
+/home/wzy/.cache/pacman.json
+```
+
 ## (Neo)[Vim](https://www.vim.org)
 
 ### [coc.nvim](https://github.com/neoclide/coc.nvim)

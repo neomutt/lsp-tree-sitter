@@ -39,7 +39,7 @@
 
 Language server for [ArchLinux](https://archlinux.org)/[Windows Msys2](https://msys2.org)'s
 [PKGBUILD](https://wiki.archlinux.org/title/PKGBUILD) and
-[`*.install`](https://wiki.archlinux.org/title/PKGBUILD#install)
+[`*.install`](https://wiki.archlinux.org/title/PKGBUILD#install).
 
 PKGBUILD is a subtype of bash. See
 [bash-language-server](https://github.com/bash-lsp/bash-language-server) to get
@@ -48,9 +48,17 @@ support of bash language server.
 - [x] document hover
 - [x] completion
 
-![document hover](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/91bfde00-28f7-4376-8b7a-10a0bd56ba51)
+## Document hover
 
-![completion](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/b4444ba5-44ab-473c-9691-b3d61ed09acd)
+![keyword](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/91bfde00-28f7-4376-8b7a-10a0bd56ba51)
+
+![package](https://github.com/Freed-Wu/pkgbuild-language-server/assets/32936898/3d9fa906-35ea-4063-a9eb-06282d3e8596)
+
+## Completion
+
+![keyword](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/b4444ba5-44ab-473c-9691-b3d61ed09acd)
+
+![package](https://github.com/Freed-Wu/pkgbuild-language-server/assets/32936898/090dae36-52fe-47f9-ae2d-cd3256cb55e8)
 
 Read
 [![readthedocs](https://shields.io/readthedocs/pkgbuild-language-server)](https://pkgbuild-language-server.readthedocs.io)
