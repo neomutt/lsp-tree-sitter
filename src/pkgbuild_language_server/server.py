@@ -26,22 +26,23 @@ from platformdirs import user_cache_dir
 from pygls.server import LanguageServer
 
 
-def check_extension(uri: str) -> bool:
+def check_extension(uri: str) -> Literal["install", "PKGBUILD", ""]:
     r"""Check extension.
 
     :param uri:
     :type uri: str
-    :rtype: bool
+    :rtype: Literal["install", "PKGBUILD", ""]
     """
-    return (
-        uri.split(os.path.extsep)[-1] == "install"
-        or os.path.basename(uri) == "PKGBUILD"
-    )
+    if uri.split(os.path.extsep)[-1] == "install":
+        return "install"
+    if os.path.basename(uri) == "PKGBUILD":
+        return "PKGBUILD"
+    return ""
 
 
 def get_document(
     method: Literal["builtin", "cache", "system"] = "builtin"
-) -> dict[str, tuple[str, str]]:
+) -> dict[str, tuple[str, str, str]]:
     r"""Get document. ``builtin`` will use builtin pkgbuild.json. ``cache``
     will generate a cache from ``${XDG_CACHE_DIRS:-/usr/share}
     /info/pkgbuild.info.gz``. ``system`` is same as ``cache`` except it doesn't
@@ -50,7 +51,7 @@ def get_document(
 
     :param method:
     :type method: Literal["builtin", "cache", "system"]
-    :rtype: dict[str, tuple[str, str]]
+    :rtype: dict[str, tuple[str, str, str]]
     """
     if method == "builtin":
         file = os.path.join(
@@ -135,8 +136,6 @@ class PKGBUILDLanguageServer(LanguageServer):
             :type params: CompletionParams
             :rtype: CompletionList
             """
-            if not check_extension(params.text_document.uri):
-                return CompletionList(is_incomplete=False, items=[])
             word = self._cursor_word(
                 params.text_document.uri, params.position, False
             )
@@ -150,6 +149,8 @@ class PKGBUILDLanguageServer(LanguageServer):
                 )
                 for x in self.document
                 if x.startswith(token)
+                and self.document[x][2]
+                == check_extension(params.text_document.uri)
             ]
             return CompletionList(is_incomplete=False, items=items)
 
@@ -180,18 +181,22 @@ class PKGBUILDLanguageServer(LanguageServer):
         :type include_all: bool
         :rtype: Tuple[str, Range] | None
         """
+        if check_extension(uri) == "PKGBUILD":
+            # PKGBUILD contains package_XXX
+            pat = r"[a-z]+"
+        else:
+            # *.install contains pre_install()
+            pat = r"[a-z_]+"
         line = self._cursor_line(uri, position)
         cursor = position.character
-        for m in re.finditer(r"[a-z]+", line):
+        for m in re.finditer(pat, line):
             end = m.end() if include_all else cursor
             if m.start() <= cursor <= m.end():
                 word = (
                     line[m.start() : end],
                     Range(
-                        start=Position(
-                            line=position.line, character=m.start()
-                        ),
-                        end=Position(line=position.line, character=end),
+                        Position(position.line, m.start()),
+                        Position(position.line, end),
                     ),
                 )
                 return word

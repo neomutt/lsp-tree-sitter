@@ -22,10 +22,10 @@ def get_content(tokens: list[Token]) -> str:
     )
 
 
-def init_document() -> dict[str, tuple[str, str]]:
+def init_document() -> dict[str, tuple[str, str, str]]:
     r"""Init document.
 
-    :rtype: dict[str, tuple[str, str]]
+    :rtype: dict[str, tuple[str, str, str]]
     """
     md = MarkdownIt("commonmark", {})
     with open(
@@ -73,8 +73,13 @@ def init_document() -> dict[str, tuple[str, str]]:
         vars = children[2].content.split()
         kind = vars[1].lstrip("(").rstrip(")") if len(vars) > 1 else ""
         kind = {"": "Variable", "array": "Field"}.get(kind, kind)
-        items[vars[0]] = (
-            kind,
+        belongs_to_install = vars[0].startswith("pre_") or vars[0].startswith(
+            "post_"
+        )
+        # Don't need to append `()` to PKGBUILD's functions due to `package_XXX()`
+        items[vars[0] + ("()" if belongs_to_install else "")] = (
+            "Function" if belongs_to_install else kind,
             get_content(tokens[index + 1 : close_index]),
+            "install" if belongs_to_install else "PKGBUILD",
         )
     return items
