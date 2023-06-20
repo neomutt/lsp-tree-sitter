@@ -37,7 +37,9 @@
 [![pypi/implementation](https://shields.io/pypi/implementation/pkgbuild-language-server)](https://pypi.org/project/pkgbuild-language-server/#files)
 [![pypi/pyversions](https://shields.io/pypi/pyversions/pkgbuild-language-server)](https://pypi.org/project/pkgbuild-language-server/#files)
 
-Language server for [PKGBUILD](https://wiki.archlinux.org/title/PKGBUILD).
+Language server for [ArchLinux](https://archlinux.org)/[Windows Msys2](https://msys2.org)'s
+[PKGBUILD](https://wiki.archlinux.org/title/PKGBUILD) and
+[`*.install`](https://wiki.archlinux.org/title/PKGBUILD#install)
 
 PKGBUILD is a subtype of bash. See
 [bash-language-server](https://github.com/bash-lsp/bash-language-server) to get
