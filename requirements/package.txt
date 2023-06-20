@@ -1,3 +1,10 @@
 #!/usr/bin/env -S pip install -r
+# To complete package names, a cache is needed.
+# Every time you change template, the cache must be regenerated.
+#
+# ```shell
+# $ pkgbuild-language-server --print-config cache
+# /home/wzy/.cache/pacman.json
+# ```
 
 pyalpm
