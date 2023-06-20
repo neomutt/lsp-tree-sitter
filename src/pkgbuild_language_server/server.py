@@ -153,6 +153,8 @@ class PKGBUILDLanguageServer(LanguageServer):
             :type params: CompletionParams
             :rtype: CompletionList
             """
+            if not check_extension(params.text_document.uri):
+                return CompletionList(is_incomplete=False, items=[])
             word = self._cursor_word(
                 params.text_document.uri, params.position, False, True
             )
