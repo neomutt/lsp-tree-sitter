@@ -47,6 +47,7 @@ support of bash language server.
 
 - [x] document hover
 - [x] completion
+- [x] diagnostic: requires [namcap](https://wiki.archlinux.org/title/Namcap)
 
 ## Document hover
 
@@ -59,6 +60,10 @@ support of bash language server.
 ![keyword](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/b4444ba5-44ab-473c-9691-b3d61ed09acd)
 
 ![package](https://github.com/Freed-Wu/pkgbuild-language-server/assets/32936898/090dae36-52fe-47f9-ae2d-cd3256cb55e8)
+
+## Diagnostic
+
+![namcap](https://github.com/Freed-Wu/pkgbuild-language-server/assets/32936898/71337b4c-87f3-4b95-9edd-f194cacb5cdf)
 
 Read
 [![readthedocs](https://shields.io/readthedocs/pkgbuild-language-server)](https://pkgbuild-language-server.readthedocs.io)

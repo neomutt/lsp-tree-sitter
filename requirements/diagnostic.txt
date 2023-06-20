@@ -1,0 +1,4 @@
+#!/usr/bin/env -S pip install -r
+# See <https://wiki.archlinux.org/title/Namcap>.
+
+git+git://gitlab.archlinux.org/pacman/namcap

@@ -13,17 +13,6 @@ $ pkgbuild-language-server --print-config template
 /home/wzy/.config/pacman/template.md.j2
 ```
 
-To complete package names, a cache is needed.
-Install [pyalpm](https://archlinux.org/packages/extra/x86_64/pyalpm)
-by `pip install 'pkgbuild-language-server[package]'` and then
-`pkgbuild-language-server --generate-cache`. Every time you change template,
-the cache must be regenerated.
-
-```shell
-$ pkgbuild-language-server --print-config cache
-/home/wzy/.cache/pacman.json
-```
-
 ## (Neo)[Vim](https://www.vim.org)
 
 ### [coc.nvim](https://github.com/neoclide/coc.nvim)

@@ -9,11 +9,16 @@ from typing import Any, Literal, Tuple
 from lsprotocol.types import (
     INITIALIZE,
     TEXT_DOCUMENT_COMPLETION,
+    TEXT_DOCUMENT_DID_CHANGE,
+    TEXT_DOCUMENT_DID_OPEN,
     TEXT_DOCUMENT_HOVER,
     CompletionItem,
     CompletionItemKind,
     CompletionList,
     CompletionParams,
+    Diagnostic,
+    DiagnosticSeverity,
+    DidChangeTextDocumentParams,
     Hover,
     InitializeParams,
     MarkupContent,
@@ -26,6 +31,34 @@ from platformdirs import user_cache_dir
 from pygls.server import LanguageServer
 
 from . import CACHE
+
+
+def diagnostic(path: str) -> list[tuple[str, str]]:
+    r"""Diagnostic.
+
+    :param path:
+    :type path: str
+    :rtype: list[tuple[str, str]]
+    """
+    try:
+        from Namcap.rules import all_rules
+    except ImportError:
+        return []
+    from Namcap.package import load_from_pkgbuild
+    from Namcap.ruleclass import PkgbuildRule
+    from Namcap.tags import format_message
+
+    pkginfo = load_from_pkgbuild(path)
+    items = []
+    for value in all_rules.values():
+        rule = value()
+        if isinstance(rule, PkgbuildRule):
+            rule.analyze(pkginfo, "PKGBUILD")  # type: ignore
+        for msg in rule.errors:
+            items += [(format_message(msg), "Error")]
+        for msg in rule.warnings:
+            items += [(format_message(msg), "Warning")]
+    return items
 
 
 def check_extension(uri: str) -> Literal["install", "PKGBUILD", ""]:
@@ -184,6 +217,35 @@ class PKGBUILDLanguageServer(LanguageServer):
                 if x.startswith(token)
             ]
             return CompletionList(is_incomplete=False, items=items)
+
+        @self.feature(TEXT_DOCUMENT_DID_OPEN)
+        @self.feature(TEXT_DOCUMENT_DID_CHANGE)
+        def did_change(params: DidChangeTextDocumentParams) -> None:
+            r"""Did change.
+
+            :param params:
+            :type params: DidChangeTextDocumentParams
+            :rtype: None
+            """
+            if not check_extension(params.text_document.uri):
+                return None
+            doc = self.workspace.get_document(params.text_document.uri)
+            source = doc.source
+            if doc.path is None:
+                return None
+            diagnostics = [
+                Diagnostic(
+                    range=Range(
+                        Position(0, 0),
+                        Position(0, len(source.splitlines()[0])),
+                    ),
+                    message=msg,
+                    severity=getattr(DiagnosticSeverity, severity),
+                    source="namcap",
+                )
+                for msg, severity in diagnostic(doc.path)
+            ]
+            self.publish_diagnostics(doc.uri, diagnostics)
 
     def _cursor_line(self, uri: str, position: Position) -> str:
         r"""Cursor line.
