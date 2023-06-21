@@ -80,9 +80,8 @@ def get_document(
 ) -> dict[str, tuple[str, str, str]]:
     r"""Get document. ``builtin`` will use builtin pkgbuild.json. ``cache``
     will generate a cache from ``${XDG_CACHE_DIRS:-/usr/share}
-    /info/pkgbuild.info.gz``. ``system`` is same as ``cache`` except it doesn't
-    generate cache. Some distribution's pkgbuild doesn't contain textinfo. So
-    we use ``builtin`` as default.
+    /man/man5/PKGBUILD.5.gz``. ``system`` is same as ``cache`` except it
+    doesn't generate cache. We use ``builtin`` as default.
 
     :param method:
     :type method: Literal["builtin", "cache", "system"]
