@@ -5,7 +5,11 @@ import os
 
 from platformdirs import user_cache_dir, user_config_dir
 
-from ._version import __version__, __version_tuple__  # type: ignore
+try:
+    from ._version import __version__, __version_tuple__  # type: ignore
+except ImportError:  # for setuptools-generate
+    __version__ = "rolling"
+    __version_tuple__ = (0, 0, 0, __version__, "")
 
 __all__ = ["__version__", "__version_tuple__"]
 
