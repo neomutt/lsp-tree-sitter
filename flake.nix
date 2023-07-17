@@ -11,8 +11,7 @@
         {
           formatter = nixpkgs-fmt;
           packages.default = buildPythonApplication rec {
-            pname = "pkgbuild-language-server";
-            version = "";
+            name = "pkgbuild-language-server";
             src = self;
             format = "pyproject";
             disabled = pythonOlder "3.6";
