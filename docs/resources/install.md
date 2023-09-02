@@ -3,7 +3,7 @@
 ## [AUR](https://aur.archlinux.org/packages/pkgbuild-language-server)
 
 ```sh
-yay -S python-pkgbuild-language-server
+yay -S pkgbuild-language-server
 ```
 
 ## [NUR](https://nur.nix-community.org/repos/Freed-Wu)
