@@ -41,13 +41,46 @@ Language server for [ArchLinux](https://archlinux.org)/[Windows Msys2](https://m
 [PKGBUILD](https://wiki.archlinux.org/title/PKGBUILD) and
 [`*.install`](https://wiki.archlinux.org/title/PKGBUILD#install).
 
-PKGBUILD is a subtype of bash. See
-[bash-language-server](https://github.com/bash-lsp/bash-language-server) to get
-support of bash language server.
+`PKGBUILD` is a subtype of bash.
+This language server only provides extra features for `build.sh` which
+[bash-language-server](https://github.com/bash-lsp/bash-language-server)
+doesn't support:
 
 - [x] document hover
+  - [x] packages
+  - [x] builtin variables/functions
 - [x] completion
-- [x] diagnostic: requires [namcap](https://wiki.archlinux.org/title/Namcap)
+  - [x] packages
+  - [x] builtin variables/functions
+- [x] diagnostic
+  - [x] [namcap](https://wiki.archlinux.org/title/Namcap)
+  - [ ] detect variable type. Such as: `depends` shouldn't be a function
+- [ ] format: sort some variables
+- [ ] document link: jump to <https://archlinux.org/packages/package_name>
+- [ ] code actions
+  - [ ] generate a template by the name of directory containing `PKGBUILD`, the
+    templates comes from:
+    - [ ] customized by user
+    - [ ] [pip2pkgbuild](https://github.com/wenLiangcan/pip2pkgbuild)
+    - [ ] [cpan2aur](https://metacpan.org/release/CPANPLUS-Dist-Arch)
+    - [ ] [gem2arch](https://github.com/anatol/gem2arch)
+    - [ ] [arch-hs](https://github.com/berberman/arch-hs)
+  - [ ] update `pkgsums` by [`updpkgsums`](https://gitlab.archlinux.org/pacman/pacman-contrib)
+  - [ ] update version by a `nvcheck.toml` to tell this
+    program where to search new version:
+
+```toml
+[package_name]
+source = "github"
+github = "author_name/repo_name"
+use_max_tag = true
+```
+
+Other features:
+
+- [ ] pre-commit-hooks
+  - [ ] linter
+  - [ ] formatter
 
 ## Document hover
 
