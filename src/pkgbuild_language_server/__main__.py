@@ -58,7 +58,7 @@ def main():
         )
         return None
     if args.generate_cache:
-        from .package import generate_cache
+        from documents.package import generate_cache
 
         try:
             generate_cache()

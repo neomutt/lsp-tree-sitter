@@ -1,5 +1,5 @@
-r"""Test server"""
-from pkgbuild_language_server.server import get_document
+r"""Test documents"""
+from pkgbuild_language_server.documents import get_document
 
 
 class Test:
