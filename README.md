@@ -46,18 +46,20 @@ This language server only provides extra features for `build.sh` which
 [bash-language-server](https://github.com/bash-lsp/bash-language-server)
 doesn't support:
 
-- [x] document hover
-  - [x] packages
-  - [x] builtin variables/functions
-- [x] completion
-  - [x] packages
-  - [x] builtin variables/functions
-- [x] diagnostic
+- [x] [Diagnostic](https://microsoft.github.io/language-server-protocol/specifications/specification-current#diagnostic):
   - [x] [namcap](https://wiki.archlinux.org/title/Namcap)
   - [ ] detect variable type. Such as: `depends` shouldn't be a function
-- [ ] format: sort some variables
-- [ ] document link: jump to <https://archlinux.org/packages/package_name>
-- [ ] code actions
+- [ ] [Document Formatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_formatting):
+  sort some variables
+- [ ] [Document Link](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_documentLink):
+  jump to <https://archlinux.org/packages/package_name>
+- [x] [Hover](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_hover)
+  - [x] packages
+  - [x] builtin variables/functions
+- [x] [Completion](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_completion):
+  - [x] packages
+  - [x] builtin variables/functions
+- [ ] [Code Action](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_codeAction)
   - [ ] generate a template by the name of directory containing `PKGBUILD`, the
     templates comes from:
     - [ ] customized by user
