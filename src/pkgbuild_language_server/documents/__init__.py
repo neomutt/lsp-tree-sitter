@@ -10,8 +10,8 @@ from platformdirs import user_cache_dir
 from .. import CACHE
 
 
-def check_extension(uri: str) -> Literal["install", "PKGBUILD", ""]:
-    r"""Check extension.
+def get_filetype(uri: str) -> Literal["install", "PKGBUILD", ""]:
+    r"""Get filetype.
 
     :param uri:
     :type uri: str

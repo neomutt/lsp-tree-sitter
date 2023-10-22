@@ -67,6 +67,7 @@ doesn't support:
     - [ ] [cpan2aur](https://metacpan.org/release/CPANPLUS-Dist-Arch)
     - [ ] [gem2arch](https://github.com/anatol/gem2arch)
     - [ ] [arch-hs](https://github.com/berberman/arch-hs)
+  - [ ] update `.SRCINFO` by `makepkg --printsrcinfo > .SRCINFO`
   - [ ] update `pkgsums` by [`updpkgsums`](https://gitlab.archlinux.org/pacman/pacman-contrib)
   - [ ] update version by a `nvcheck.toml` to tell this
     program where to search new version:
