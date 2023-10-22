@@ -28,7 +28,11 @@ from lsprotocol.types import (
 from pygls.server import LanguageServer
 
 from .documents import get_document, get_filetype, get_packages
-from .utils import diagnostic
+from .parser import parse
+from .tree_sitter_lsp.diagnose import get_diagnostics
+from .tree_sitter_lsp.finders import PositionFinder
+from .tree_sitter_lsp.format import get_text_edits
+from .utils import DIAGNOSTICS_FINDERS, namcap
 
 
 class PKGBUILDLanguageServer(LanguageServer):
@@ -44,6 +48,7 @@ class PKGBUILDLanguageServer(LanguageServer):
         super().__init__(*args)
         self.document = {}
         self.packages = {}
+        self.trees = {}
 
         @self.feature(INITIALIZE)
         def initialize(params: InitializeParams) -> None:
@@ -58,6 +63,29 @@ class PKGBUILDLanguageServer(LanguageServer):
             self.document = get_document(method)  # type: ignore
             self.packages = get_packages()
 
+        @self.feature(TEXT_DOCUMENT_DID_OPEN)
+        @self.feature(TEXT_DOCUMENT_DID_CHANGE)
+        def did_change(params: DidChangeTextDocumentParams) -> None:
+            r"""Did change.
+
+            :param params:
+            :type params: DidChangeTextDocumentParams
+            :rtype: None
+            """
+            if get_filetype(params.text_document.uri) == "":
+                return None
+            document = self.workspace.get_document(params.text_document.uri)
+            diagnostics = []
+            if document.path is not None:
+                diagnostics += namcap(document.path, document.source)
+            self.trees[document.uri] = parse(document.source.encode())
+            diagnostics = get_diagnostics(
+                DIAGNOSTICS_FINDERS,
+                document.uri,
+                self.trees[document.uri],
+            )
+            self.publish_diagnostics(params.text_document.uri, diagnostics)
+
         @self.feature(TEXT_DOCUMENT_HOVER)
         def hover(params: TextDocumentPositionParams) -> Hover | None:
             r"""Hover.
@@ -69,21 +97,44 @@ class PKGBUILDLanguageServer(LanguageServer):
             filetype = get_filetype(params.text_document.uri)
             if filetype == "":
                 return None
-            if filetype == "PKGBUILD":
-                # PKGBUILD contains package_XXX
-                pat = r"[a-z]+"
-            else:
-                # *.install contains pre_install()
-                pat = r"[a-z_]+"
-            word, _range = self._cursor_word(
-                params.text_document.uri, params.position, True, pat
+            document = self.workspace.get_document(params.text_document.uri)
+            uni = PositionFinder(params.position).find(
+                document.uri, self.trees[document.uri]
             )
-            if word == "":
-                return self.hover(params)
-            result = self.document.get(word)
-            if not result:
-                return self.hover(params)
-            return Hover(MarkupContent(MarkupKind.Markdown, result[1]), _range)
+            if uni is None:
+                return None
+            text = uni.get_text()
+            _range = uni.get_range()
+            parent = uni.node.parent
+            if parent is None:
+                return None
+            if parent.type == "array":
+                result = self.packages.get(text)
+                if result is None:
+                    return None
+                return Hover(
+                    MarkupContent(MarkupKind.Markdown, result), _range
+                )
+            # PKGBUILD contains package_XXX
+            if filetype == "PKGBUILD":
+                text = text.split("_")[0]
+            type_ = ""
+            if uni.node.type == "variable_name":
+                type_ = "Variable"
+            if uni.node.type == "word" and parent.type in {
+                "function_definition",
+                "command_name",
+            }:
+                type_ = "Function"
+                text += "()"
+            if type_ == "":
+                return None
+            _type, result, _filetype = self.document.get(text, ["", "", ""])
+            if _type == "Field":
+                _type = "Variable"
+            if result == "" or _filetype != filetype or type_ != _type:
+                return None
+            return Hover(MarkupContent(MarkupKind.Markdown, result), _range)
 
         @self.feature(TEXT_DOCUMENT_COMPLETION)
         def completions(params: CompletionParams) -> CompletionList:
@@ -126,35 +177,6 @@ class PKGBUILDLanguageServer(LanguageServer):
                 if x.startswith(token)
             ]
             return CompletionList(False, items)
-
-        @self.feature(TEXT_DOCUMENT_DID_OPEN)
-        @self.feature(TEXT_DOCUMENT_DID_CHANGE)
-        def did_change(params: DidChangeTextDocumentParams) -> None:
-            r"""Did change.
-
-            :param params:
-            :type params: DidChangeTextDocumentParams
-            :rtype: None
-            """
-            if get_filetype(params.text_document.uri) == "":
-                return None
-            doc = self.workspace.get_document(params.text_document.uri)
-            source = doc.source
-            if doc.path is None:
-                return None
-            diagnostics = [
-                Diagnostic(
-                    range=Range(
-                        Position(0, 0),
-                        Position(0, len(source.splitlines()[0])),
-                    ),
-                    message=msg,
-                    severity=getattr(DiagnosticSeverity, severity),
-                    source="namcap",
-                )
-                for msg, severity in diagnostic(doc.path)
-            ]
-            self.publish_diagnostics(doc.uri, diagnostics)
 
     def _cursor_line(self, uri: str, position: Position) -> str:
         r"""Cursor line.
@@ -202,24 +224,4 @@ class PKGBUILDLanguageServer(LanguageServer):
         return (
             "",
             Range(Position(position.line, 0), Position(position.line, 0)),
-        )
-
-    def hover(self, params: TextDocumentPositionParams) -> Hover | None:
-        r"""Hover.
-
-        :param params:
-        :type params: TextDocumentPositionParams
-        :rtype: Hover | None
-        """
-        word = self._cursor_word(
-            params.text_document.uri, params.position, True, r"[-0-9_a-z]+"
-        )
-        if not word:
-            return None
-        doc = self.packages.get(word[0])
-        if not doc:
-            return None
-        return Hover(
-            contents=MarkupContent(kind=MarkupKind.Markdown, value=doc),
-            range=word[1],
         )

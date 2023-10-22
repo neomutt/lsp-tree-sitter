@@ -1,14 +1,24 @@
 r"""Utils
 =========
 """
+from lsprotocol.types import Diagnostic, DiagnosticSeverity, Position, Range
+
+from .tree_sitter_lsp.finders import ErrorFinder, MissingFinder
+
+DIAGNOSTICS_FINDERS = [
+    ErrorFinder(),
+    MissingFinder(),
+]
 
 
-def diagnostic(path: str) -> list[tuple[str, str]]:
-    r"""Diagnostic.
+def namcap(path: str, source: str) -> list[Diagnostic]:
+    r"""Namcap.
 
     :param path:
     :type path: str
-    :rtype: list[tuple[str, str]]
+    :param source:
+    :type source: str
+    :rtype: list[Diagnostic]
     """
     try:
         from Namcap.rules import all_rules
@@ -19,13 +29,17 @@ def diagnostic(path: str) -> list[tuple[str, str]]:
     from Namcap.tags import format_message
 
     pkginfo = load_from_pkgbuild(path)
-    items = []
+    items = {}
     for value in all_rules.values():
         rule = value()
         if isinstance(rule, PkgbuildRule):
             rule.analyze(pkginfo, "PKGBUILD")  # type: ignore
         for msg in rule.errors:
-            items += [(format_message(msg), "Error")]
+            items[format_message(msg)] = DiagnosticSeverity.Error
         for msg in rule.warnings:
-            items += [(format_message(msg), "Warning")]
-    return items
+            items[format_message(msg)] = DiagnosticSeverity.Warning
+    end = len(source.splitlines()[0])
+    return [
+        Diagnostic(Range(Position(0, 0), Position(0, end)), msg, severity)
+        for msg, severity in items.items()
+    ]
