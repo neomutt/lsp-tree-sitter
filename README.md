@@ -48,7 +48,7 @@ doesn't support:
 
 - [x] [Diagnostic](https://microsoft.github.io/language-server-protocol/specifications/specification-current#diagnostic):
   - [x] [namcap](https://wiki.archlinux.org/title/Namcap)
-  - [ ] detect variable type. Such as: `depends` shouldn't be a function
+  - [ ] variable type. Such as: `depends` shouldn't be a function
 - [ ] [Document Formatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_formatting):
   sort some variables
 - [ ] [Document Link](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_documentLink):

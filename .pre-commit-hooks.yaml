@@ -1,0 +1,15 @@
+---
+- id: pkgbuild-language-server-check
+  name: pkgbuild language server check
+  description: >
+    Check PKGBUILD and *.install
+  language: python
+  files: (PKGBUILD|\.install)$
+  entry: pkgbuild-language-server --check
+- id: pkgbuild-language-server-format
+  name: pkgbuild language server format
+  description: >
+    Format PKGBUILD and *.install
+  language: python
+  files: (PKGBUILD|\.install)$
+  entry: pkgbuild-language-server --format
