@@ -42,6 +42,24 @@ def get_parser():
         action="store_true",
         help="generate cache for archlinux packages",
     )
+    parser.add_argument(
+        "--check",
+        nargs="*",
+        default=[],
+        help="check file's errors and warnings",
+    )
+    parser.add_argument(
+        "--format",
+        nargs="*",
+        default=[],
+        help="format files",
+    )
+    parser.add_argument(
+        "--color",
+        choices=["auto", "always", "never"],
+        default="auto",
+        help="when to display color",
+    )
     return parser
 
 
