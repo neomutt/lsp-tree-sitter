@@ -2,7 +2,7 @@ r"""Server
 ==========
 """
 import re
-from typing import Any, Tuple
+from typing import Any
 
 from lsprotocol.types import (
     INITIALIZE,
@@ -27,7 +27,7 @@ from lsprotocol.types import (
 )
 from pygls.server import LanguageServer
 
-from .documents import check_extension, get_document, get_packages
+from .documents import get_document, get_filetype, get_packages
 from .utils import diagnostic
 
 
@@ -66,27 +66,24 @@ class PKGBUILDLanguageServer(LanguageServer):
             :type params: TextDocumentPositionParams
             :rtype: Hover | None
             """
-            if not check_extension(params.text_document.uri):
+            filetype = get_filetype(params.text_document.uri)
+            if filetype == "":
                 return None
-            if check_extension(params.text_document.uri) == "PKGBUILD":
+            if filetype == "PKGBUILD":
                 # PKGBUILD contains package_XXX
                 pat = r"[a-z]+"
             else:
                 # *.install contains pre_install()
                 pat = r"[a-z_]+"
-            word = self._cursor_word(
+            word, _range = self._cursor_word(
                 params.text_document.uri, params.position, True, pat
             )
-            if not word:
+            if word == "":
                 return self.hover(params)
-            result = self.document.get(word[0])
+            result = self.document.get(word)
             if not result:
                 return self.hover(params)
-            doc = f"**{result[0]}**\n{result[1]}"
-            return Hover(
-                contents=MarkupContent(kind=MarkupKind.Markdown, value=doc),
-                range=word[1],
-            )
+            return Hover(MarkupContent(MarkupKind.Markdown, result[1]), _range)
 
         @self.feature(TEXT_DOCUMENT_COMPLETION)
         def completions(params: CompletionParams) -> CompletionList:
@@ -96,7 +93,8 @@ class PKGBUILDLanguageServer(LanguageServer):
             :type params: CompletionParams
             :rtype: CompletionList
             """
-            if not check_extension(params.text_document.uri):
+            filetype = get_filetype(params.text_document.uri)
+            if filetype == "":
                 return CompletionList(is_incomplete=False, items=[])
             word = self._cursor_word(
                 params.text_document.uri,
@@ -107,19 +105,17 @@ class PKGBUILDLanguageServer(LanguageServer):
             token = "" if word is None else word[0]
             items = [
                 CompletionItem(
-                    label=x,
+                    x,
                     kind=getattr(CompletionItemKind, self.document[x][0]),
                     documentation=self.document[x][1],
                     insert_text=x,
                 )
                 for x in self.document
-                if x.startswith(token)
-                and self.document[x][2]
-                == check_extension(params.text_document.uri)
+                if x.startswith(token) and self.document[x][2] == filetype
             ]
             items += [
                 CompletionItem(
-                    label=x,
+                    x,
                     kind=CompletionItemKind.Module,
                     documentation=MarkupContent(
                         kind=MarkupKind.Markdown, value=self.packages[x]
@@ -129,7 +125,7 @@ class PKGBUILDLanguageServer(LanguageServer):
                 for x in self.packages
                 if x.startswith(token)
             ]
-            return CompletionList(is_incomplete=False, items=items)
+            return CompletionList(False, items)
 
         @self.feature(TEXT_DOCUMENT_DID_OPEN)
         @self.feature(TEXT_DOCUMENT_DID_CHANGE)
@@ -140,7 +136,7 @@ class PKGBUILDLanguageServer(LanguageServer):
             :type params: DidChangeTextDocumentParams
             :rtype: None
             """
-            if not check_extension(params.text_document.uri):
+            if get_filetype(params.text_document.uri) == "":
                 return None
             doc = self.workspace.get_document(params.text_document.uri)
             source = doc.source
