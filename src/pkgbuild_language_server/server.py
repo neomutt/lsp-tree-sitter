@@ -1,7 +1,6 @@
 r"""Server
 ==========
 """
-import re
 from typing import Any
 
 from lsprotocol.types import (
@@ -9,29 +8,29 @@ from lsprotocol.types import (
     TEXT_DOCUMENT_COMPLETION,
     TEXT_DOCUMENT_DID_CHANGE,
     TEXT_DOCUMENT_DID_OPEN,
+    TEXT_DOCUMENT_DOCUMENT_LINK,
     TEXT_DOCUMENT_HOVER,
     CompletionItem,
     CompletionItemKind,
     CompletionList,
     CompletionParams,
-    Diagnostic,
-    DiagnosticSeverity,
     DidChangeTextDocumentParams,
+    DocumentLink,
+    DocumentLinkParams,
     Hover,
     InitializeParams,
     MarkupContent,
     MarkupKind,
     Position,
-    Range,
     TextDocumentPositionParams,
 )
 from pygls.server import LanguageServer
 
 from .documents import get_document, get_filetype, get_packages
+from .finders import PackageFinder
 from .parser import parse
 from .tree_sitter_lsp.diagnose import get_diagnostics
 from .tree_sitter_lsp.finders import PositionFinder
-from .tree_sitter_lsp.format import get_text_edits
 from .utils import DIAGNOSTICS_FINDERS, namcap
 
 
@@ -85,6 +84,24 @@ class PKGBUILDLanguageServer(LanguageServer):
                 self.trees[document.uri],
             )
             self.publish_diagnostics(params.text_document.uri, diagnostics)
+
+        @self.feature(TEXT_DOCUMENT_DOCUMENT_LINK)
+        def document_link(params: DocumentLinkParams) -> list[DocumentLink]:
+            r"""Get document links.
+
+            :param params:
+            :type params: DocumentLinkParams
+            :rtype: list[DocumentLink]
+            """
+            filetype = get_filetype(params.text_document.uri)
+            if filetype == "":
+                return []
+            document = self.workspace.get_document(params.text_document.uri)
+            return PackageFinder().get_document_links(
+                document.uri,
+                self.trees[document.uri],
+                "https://archlinux.org/packages/{{uni.get_text()}}",
+            )
 
         @self.feature(TEXT_DOCUMENT_HOVER)
         def hover(params: TextDocumentPositionParams) -> Hover | None:
