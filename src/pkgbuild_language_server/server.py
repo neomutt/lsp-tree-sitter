@@ -27,11 +27,11 @@ from lsprotocol.types import (
 from pygls.server import LanguageServer
 
 from .documents import get_document, get_filetype, get_packages
-from .finders import PackageFinder
+from .finders import InvalidKeywordFinder, PackageFinder
 from .parser import parse
 from .tree_sitter_lsp.diagnose import get_diagnostics
 from .tree_sitter_lsp.finders import PositionFinder
-from .utils import DIAGNOSTICS_FINDERS, namcap
+from .utils import DIAGNOSTICS_FINDERS, get_keywords, namcap
 
 
 class PKGBUILDLanguageServer(LanguageServer):
@@ -46,6 +46,7 @@ class PKGBUILDLanguageServer(LanguageServer):
         """
         super().__init__(*args)
         self.document = {}
+        self.keywords = {}
         self.packages = {}
         self.trees = {}
 
@@ -60,6 +61,7 @@ class PKGBUILDLanguageServer(LanguageServer):
             opts = params.initialization_options
             method = getattr(opts, "method", "builtin")
             self.document = get_document(method)  # type: ignore
+            self.keywords = get_keywords(self.document)
             self.packages = get_packages()
 
         @self.feature(TEXT_DOCUMENT_DID_OPEN)
@@ -71,7 +73,8 @@ class PKGBUILDLanguageServer(LanguageServer):
             :type params: DidChangeTextDocumentParams
             :rtype: None
             """
-            if get_filetype(params.text_document.uri) == "":
+            filetype = get_filetype(params.text_document.uri)
+            if filetype == "":
                 return None
             document = self.workspace.get_document(params.text_document.uri)
             diagnostics = []
@@ -79,7 +82,8 @@ class PKGBUILDLanguageServer(LanguageServer):
                 diagnostics += namcap(document.path, document.source)
             self.trees[document.uri] = parse(document.source.encode())
             diagnostics = get_diagnostics(
-                DIAGNOSTICS_FINDERS,
+                DIAGNOSTICS_FINDERS
+                + [InvalidKeywordFinder(self.keywords[filetype], filetype)],
                 document.uri,
                 self.trees[document.uri],
             )

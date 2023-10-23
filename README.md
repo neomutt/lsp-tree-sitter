@@ -48,9 +48,13 @@ doesn't support:
 
 - [x] [Diagnostic](https://microsoft.github.io/language-server-protocol/specifications/specification-current#diagnostic):
   - [x] [namcap](https://wiki.archlinux.org/title/Namcap)
-  - [ ] variable type. Such as: `depends` shouldn't be a function
+  - [x] variable type. Such as: `depends` shouldn't be a function
+  - [ ] unsorted builtin variables/functions
+  - [ ] unsorted array. Such as: `depends=(pyalpm namcap)` should be
+    `depends=(namcap pyalpm)`
 - [ ] [Document Formatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_formatting):
-  sort some variables
+  - [ ] sort builtin variables/functions
+  - [ ] sort array
 - [x] [Document Link](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_documentLink):
   jump to <https://archlinux.org/packages/package_name>
 - [x] [Hover](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_hover)
@@ -81,8 +85,8 @@ use_max_tag = true
 
 Other features:
 
-- [ ] pre-commit-hooks
-  - [ ] linter
+- [x] pre-commit-hooks
+  - [x] linter
   - [ ] formatter
 
 ## Document Link

@@ -67,6 +67,7 @@ def main():
     r"""Parse arguments and provide shell completions."""
     parser = get_parser()
     args = parser.parse_args()
+
     if args.print_config:
         print(
             CONFIG.get(
@@ -83,6 +84,13 @@ def main():
         except ImportError as e:
             logger.error(f"Please install {e.name}!")
         return None
+
+    from .parser import parse
+    from .utils import check
+
+    result = check(args.check, parse, args.color)
+    if args.check:
+        exit(result)
 
     from .server import PKGBUILDLanguageServer
 
