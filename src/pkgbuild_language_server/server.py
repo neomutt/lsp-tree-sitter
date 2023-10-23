@@ -147,81 +147,42 @@ class PKGBUILDLanguageServer(LanguageServer):
             filetype = get_filetype(params.text_document.uri)
             if filetype == "":
                 return CompletionList(is_incomplete=False, items=[])
-            word = self._cursor_word(
-                params.text_document.uri,
-                params.position,
+            document = self.workspace.get_document(params.text_document.uri)
+            uni = PositionFinder(
+                Position(params.position.line, params.position.character - 1)
+            ).find(document.uri, self.trees[document.uri])
+            if uni is None:
+                return CompletionList(False, [])
+            text = uni.get_text()
+            parent = uni.node.parent
+            if parent is None:
+                return CompletionList(False, [])
+            if parent.type == "array":
+                return CompletionList(
+                    False,
+                    [
+                        CompletionItem(
+                            k,
+                            kind=CompletionItemKind.Module,
+                            documentation=MarkupContent(
+                                MarkupKind.Markdown, v
+                            ),
+                            insert_text=k,
+                        )
+                        for k, v in self.packages.items()
+                        if k.startswith(text)
+                    ],
+                )
+            return CompletionList(
                 False,
-                r"[-0-9_a-z]+",
+                [
+                    CompletionItem(
+                        k,
+                        kind=getattr(CompletionItemKind, v[0]),
+                        documentation=v[1],
+                        insert_text=k,
+                    )
+                    for k, v in self.document.items()
+                    if k.startswith(text) and v[2] == filetype
+                ],
             )
-            token = "" if word is None else word[0]
-            items = [
-                CompletionItem(
-                    x,
-                    kind=getattr(CompletionItemKind, self.document[x][0]),
-                    documentation=self.document[x][1],
-                    insert_text=x,
-                )
-                for x in self.document
-                if x.startswith(token) and self.document[x][2] == filetype
-            ]
-            items += [
-                CompletionItem(
-                    x,
-                    kind=CompletionItemKind.Module,
-                    documentation=MarkupContent(
-                        kind=MarkupKind.Markdown, value=self.packages[x]
-                    ),
-                    insert_text=x,
-                )
-                for x in self.packages
-                if x.startswith(token)
-            ]
-            return CompletionList(False, items)
-
-    def _cursor_line(self, uri: str, position: Position) -> str:
-        r"""Cursor line.
-
-        :param uri:
-        :type uri: str
-        :param position:
-        :type position: Position
-        :rtype: str
-        """
-        document = self.workspace.get_document(uri)
-        return document.source.splitlines()[position.line]
-
-    def _cursor_word(
-        self,
-        uri: str,
-        position: Position,
-        include_all: bool = True,
-        regex: str = r"\w+",
-    ) -> tuple[str, Range]:
-        """Cursor word.
-
-        :param self:
-        :param uri:
-        :type uri: str
-        :param position:
-        :type position: Position
-        :param include_all:
-        :type include_all: bool
-        :param regex:
-        :type regex: str
-        :rtype: tuple[str, Range]
-        """
-        line = self._cursor_line(uri, position)
-        for m in re.finditer(regex, line):
-            if m.start() <= position.character <= m.end():
-                end = m.end() if include_all else position.character
-                return (
-                    line[m.start() : end],
-                    Range(
-                        Position(position.line, m.start()),
-                        Position(position.line, end),
-                    ),
-                )
-        return (
-            "",
-            Range(Position(position.line, 0), Position(position.line, 0)),
-        )
