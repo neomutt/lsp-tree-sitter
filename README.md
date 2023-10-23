@@ -51,7 +51,7 @@ doesn't support:
   - [ ] variable type. Such as: `depends` shouldn't be a function
 - [ ] [Document Formatting](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_formatting):
   sort some variables
-- [ ] [Document Link](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_documentLink):
+- [x] [Document Link](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_documentLink):
   jump to <https://archlinux.org/packages/package_name>
 - [x] [Hover](https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_hover)
   - [x] packages
@@ -85,7 +85,11 @@ Other features:
   - [ ] linter
   - [ ] formatter
 
-## Document hover
+## Document Link
+
+![document link](https://github.com/Freed-Wu/pkgbuild-language-server/assets/32936898/d3777f3c-9b75-41f9-b6b3-1c4ec55c7283)
+
+## Hover
 
 ![keyword](https://github.com/Freed-Wu/requirements-language-server/assets/32936898/91bfde00-28f7-4376-8b7a-10a0bd56ba51)
 
