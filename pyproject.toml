@@ -1,13 +1,12 @@
 [build-system]
-requires = ["scikit-build-core"]
-build-backend = "scikit_build_core.build"
+requires = ["setuptools >= 42"]
+build-backend = "setuptools.build_meta"
 
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [project]
 name = "pkgbuild-language-server"
 description = "pkgbuild language server"
 readme = "README.md"
-# type_a | type_b
 requires-python = ">= 3.10"
 keywords = ["pkgbuild", "language server"]
 classifiers = [
@@ -27,16 +26,8 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-# dynamic = ["version", "dependencies", "optional-dependencies"]
-# https://github.com/pypa/twine/issues/753
-dynamic = ["version"]
-dependencies = ["colorama", "jinja2", "platformdirs", "pygls", "tree-sitter"]
-
-[project.optional-dependencies]
-cache = ["markdown-it-py", "pypandoc"]
-dev = ["pytest-cov"]
-diagnostic = ["namcap"]
-package = ["pyalpm"]
+dynamic = ["dependencies"]
+version = "0.0.7"
 
 [[project.authors]]
 name = "Wu Zhenyu"
@@ -46,46 +37,16 @@ email = "wuzhenyu@ustc.edu"
 text = "GPL v3"
 
 [project.urls]
-Homepage = "https://pkgbuild-language-server.readthedocs.io"
-Download = "https://github.com/Freed-Wu/pkgbuild-language-server/releases"
-"Bug Report" = "https://github.com/Freed-Wu/pkgbuild-language-server/issues"
-Source = "https://github.com/Freed-Wu/pkgbuild-language-server"
+Homepage = "https://termux-language-server.readthedocs.io"
+Download = "https://github.com/termux/termux-language-server/releases"
+"Bug Report" = "https://github.com/termux/termux-language-server/issues"
+Source = "https://github.com/termux/termux-language-server"
 
-[project.scripts]
-pkgbuild-language-server = "pkgbuild_language_server.__main__:main"
-
-[tool.scikit-build]
-experimental = true
-
-[tool.scikit-build.metadata.version]
-provider = "scikit_build_core.metadata.setuptools_scm"
-
-[tool.scikit-build.sdist]
-include = ["src/pkgbuild_language_server/_version.py"]
-
-[[tool.scikit-build.generate]]
-path = "pkgbuild_language_server/_metainfo.py"
-template-path = "templates/metainfo.py"
+[tool.setuptools.package-data]
+pkgbuild_language_server = ["py.typed", "assets/**"]
 
 [tool.setuptools.dynamic.dependencies]
 file = "requirements.txt"
-
-# begin: scripts/update-pyproject.toml.pl
-[tool.setuptools.dynamic.optional-dependencies.cache]
-file = "requirements/cache.txt"
-
-[tool.setuptools.dynamic.optional-dependencies.dev]
-file = "requirements/dev.txt"
-
-[tool.setuptools.dynamic.optional-dependencies.diagnostic]
-file = "requirements/diagnostic.txt"
-
-[tool.setuptools.dynamic.optional-dependencies.package]
-file = "requirements/package.txt"
-# end: scripts/update-pyproject.toml.pl
-
-[tool.setuptools_scm]
-write_to = "src/pkgbuild_language_server/_version.py"
 
 [tool.mdformat]
 number = true
@@ -116,6 +77,5 @@ skips = ["*_test.py", "*/test_*.py"]
 
 [tool.cibuildwheel]
 archs = ["all"]
-skip = "*37-* *38-* *39-*"
-before-test = "pip install -rrequirements.txt -rrequirements/dev.txt"
+before-test = "pip install pytest"
 test-command = "pytest {project}"
