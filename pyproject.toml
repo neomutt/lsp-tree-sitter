@@ -1,14 +1,15 @@
 [build-system]
-requires = ["setuptools >= 42"]
+requires = ["setuptools_scm[toml] >= 6.2", "setuptools-generate >= 0.0.6"]
 build-backend = "setuptools.build_meta"
 
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [project]
-name = "pkgbuild-language-server"
-description = "pkgbuild language server"
+name = "tree-sitter-lsp"
+description = "a library to create language servers"
 readme = "README.md"
+# type_a | type_b
 requires-python = ">= 3.10"
-keywords = ["pkgbuild", "language server"]
+keywords = ["language server", "tree sitter", "json schema"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -26,8 +27,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dynamic = ["dependencies"]
-version = "0.0.7"
+dynamic = ["version", "dependencies", "optional-dependencies"]
 
 [[project.authors]]
 name = "Wu Zhenyu"
@@ -37,16 +37,27 @@ email = "wuzhenyu@ustc.edu"
 text = "GPL v3"
 
 [project.urls]
-Homepage = "https://termux-language-server.readthedocs.io"
-Download = "https://github.com/termux/termux-language-server/releases"
-"Bug Report" = "https://github.com/termux/termux-language-server/issues"
-Source = "https://github.com/termux/termux-language-server"
+Homepage = "https://tree-sitter-lsp.readthedocs.io"
+Download = "https://github.com/Freed-Wu/tree-sitter-lsp/releases"
+"Bug Report" = "https://github.com/Freed-Wu/tree-sitter-lsp/issues"
+Source = "https://github.com/Freed-Wu/tree-sitter-lsp"
 
 [tool.setuptools.package-data]
-pkgbuild_language_server = ["py.typed", "assets/**"]
+tree_sitter_lsp = ["py.typed", "assets/**"]
 
 [tool.setuptools.dynamic.dependencies]
 file = "requirements.txt"
+
+# begin: scripts/update-pyproject.toml.pl
+[tool.setuptools.dynamic.optional-dependencies.dev]
+file = "requirements/dev.txt"
+# end: scripts/update-pyproject.toml.pl
+
+[tool.setuptools_scm]
+write_to = "src/tree_sitter_lsp/_version.py"
+
+[tool.setuptools-generate]
+write-to = "src/tree_sitter_lsp/_metainfo.py"
 
 [tool.mdformat]
 number = true
@@ -77,5 +88,6 @@ skips = ["*_test.py", "*/test_*.py"]
 
 [tool.cibuildwheel]
 archs = ["all"]
-before-test = "pip install pytest"
+skip = "*37-* *38-* *39-*"
+before-test = "pip install -rrequirements.txt -rrequirements/dev.txt"
 test-command = "pytest {project}"

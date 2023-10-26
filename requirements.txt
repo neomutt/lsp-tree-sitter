@@ -1,3 +1,7 @@
 #!/usr/bin/env -S pip install -r
 
-termux-language-server
+colorama
+jinja2
+jsonschema
+pygls
+tree-sitter
