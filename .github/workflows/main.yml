@@ -47,7 +47,7 @@ jobs:
           pytest --cov
       - uses: codecov/codecov-action@v3
   build:
-    # needs: test
+    needs: test
     strategy:
       fail-fast: false
       matrix:
