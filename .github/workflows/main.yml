@@ -27,7 +27,8 @@ jobs:
         runs-on:
           - ubuntu-latest
           - macos-latest
-          - windows-latest
+          # https://github.com/tree-sitter/py-tree-sitter/issues/170
+          # - windows-latest
     runs-on: ${{matrix.runs-on}}
     steps:
       - uses: actions/checkout@v3
