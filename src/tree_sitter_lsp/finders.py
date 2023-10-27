@@ -301,6 +301,8 @@ class PositionFinder(Finder):
     def __init__(
         self,
         position: Position,
+        left_equal: bool = True,
+        right_equal: bool = False,
         message: str = "",
         severity: DiagnosticSeverity = DiagnosticSeverity.Information,
     ) -> None:
@@ -308,6 +310,10 @@ class PositionFinder(Finder):
 
         :param position:
         :type position: Position
+        :param left_equal:
+        :type left_equal: bool
+        :param right_equal:
+        :type right_equal: bool
         :param message:
         :type message: str
         :param severity:
@@ -316,20 +322,37 @@ class PositionFinder(Finder):
         """
         super().__init__(message, severity)
         self.position = position
+        self.left_equal = left_equal
+        self.right_equal = right_equal
 
     @staticmethod
-    def belong(position: Position, node: Node) -> bool:
+    def belong(
+        position: Position,
+        node: Node,
+        left_equal: bool = True,
+        right_equal: bool = False,
+    ) -> bool:
         r"""Belong.
 
         :param position:
         :type position: Position
         :param node:
         :type node: Node
+        :param left_equal:
+        :type left_equal: bool
+        :param right_equal:
+        :type right_equal: bool
         :rtype: bool
         """
-        return (
-            Position(*node.start_point) <= position < Position(*node.end_point)
-        )
+        if left_equal:
+            left_flag = Position(*node.start_point) <= position
+        else:
+            left_flag = Position(*node.start_point) < position
+        if right_equal:
+            right_flag = position <= Position(*node.end_point)
+        else:
+            right_flag = position < Position(*node.end_point)
+        return left_flag and right_flag
 
     def __call__(self, uni: UNI) -> bool:
         r"""Call.
@@ -339,7 +362,9 @@ class PositionFinder(Finder):
         :rtype: bool
         """
         node = uni.node
-        return node.child_count == 0 and self.belong(self.position, node)
+        return node.child_count == 0 and self.belong(
+            self.position, node, self.left_equal, self.right_equal
+        )
 
 
 @dataclass(init=False)
