@@ -45,9 +45,9 @@ def get_finders(
     :rtype: tuple[list[Finder], list[type[Finder]]]
     """
     if classes is None:
-        from .finders import ErrorFinder, MissingFinder
+        from .finders import ErrorFinder
 
-        classes = [ErrorFinder, MissingFinder]
+        classes = [ErrorFinder]
 
     finders = []
     finder_classes = []
