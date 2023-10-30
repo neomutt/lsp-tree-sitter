@@ -17,7 +17,7 @@ from lsprotocol.types import (
     Range,
     TextEdit,
 )
-from tree_sitter import Node, Tree
+from tree_sitter import Language, Node, Tree
 from tree_sitter.binding import Query
 
 from . import UNI, Finder
@@ -41,26 +41,6 @@ class MissingFinder(Finder):
         node = uni.node
         return node.is_missing and not (
             any(child.is_missing for child in node.children)
-        )
-
-
-@dataclass
-class ErrorFinder(Finder):
-    r"""Errorfinder."""
-
-    message: str = "{{uni.get_text()}}: error"
-    severity: DiagnosticSeverity = DiagnosticSeverity.Error
-
-    def __call__(self, uni: UNI) -> bool:
-        r"""Call.
-
-        :param uni:
-        :type uni: UNI
-        :rtype: bool
-        """
-        node = uni.node
-        return node.has_error and not (
-            any(child.has_error for child in node.children)
         )
 
 
@@ -619,3 +599,78 @@ class QueryFinder(Finder):
         :rtype: UNI
         """
         return UNI(uri, capture[0])
+
+
+@dataclass(init=False)
+class ErrorFinder(QueryFinder):
+    r"""Errorfinder."""
+
+    def __init__(
+        self,
+        language: Language | None = None,
+        message: str = "{{uni.get_text()}}: error",
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+    ):
+        r"""Init.
+
+        :param language:
+        :type language: Language | None
+        :param message:
+        :type message: str
+        :param severity:
+        :type severity: DiagnosticSeverity
+        """
+        with open(
+            os.path.join(
+                os.path.join(
+                    os.path.join(os.path.dirname(__file__), "assets"),
+                    "queries",
+                ),
+                "error.scm",
+            )
+        ) as f:
+            text = f.read()
+        if language is not None:
+            query = language.query(text)
+            super().__init__(query, message, severity)
+        else:
+            Finder.__init__(self, message, severity)
+            self.find_all = Finder().find_all
+
+    def __call__(self, uni: UNI) -> bool:
+        r"""Call.
+
+        :param uni:
+        :type uni: UNI
+        :rtype: bool
+        """
+        node = uni.node
+        return node.has_error and not (
+            any(child.has_error for child in node.children)
+        )
+
+
+@dataclass(init=False)
+class ErrorQueryFinder(ErrorFinder):
+    r"""Errorqueryfinder."""
+
+    def __init__(
+        self,
+        filetype: str,
+        message: str = "{{uni.get_text()}}: error",
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+    ) -> None:
+        r"""Init.
+
+        :param filetype:
+        :type filetype: str
+        :param message:
+        :type message: str
+        :param severity:
+        :type severity: DiagnosticSeverity
+        :rtype: None
+        """
+        from tree_sitter_languages import get_language
+
+        language = get_language(filetype)
+        super().__init__(language, message, severity)
