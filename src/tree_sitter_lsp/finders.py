@@ -587,16 +587,20 @@ class QueryFinder(Finder):
         :type uri: str
         :rtype: list[UNI]
         """
-        return [self.captures2uni(capture, uri) for capture in captures]
+        unis = []
+        for capture in captures:
+            if uni := self.capture2uni(capture, uri):
+                unis += [uni]
+        return unis
 
-    def captures2uni(self, capture: tuple[Node, str], uri: str) -> UNI:
-        r"""Captures2uni.
+    def capture2uni(self, capture: tuple[Node, str], uri: str) -> UNI | None:
+        r"""Capture2uni.
 
         :param capture:
         :type capture: tuple[Node, str]
         :param uri:
         :type uri: str
-        :rtype: UNI
+        :rtype: UNI | None
         """
         return UNI(uri, capture[0])
 
