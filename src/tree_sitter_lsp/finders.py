@@ -18,6 +18,7 @@ from lsprotocol.types import (
     TextEdit,
 )
 from tree_sitter import Node, Tree
+from tree_sitter.binding import Query
 
 from . import UNI, Finder
 from .schema import Trie
@@ -553,3 +554,68 @@ class SchemaFinder(Finder):
             )
             for error in self.validator.iter_errors(trie.to_json())
         ]
+
+
+@dataclass(init=False)
+class QueryFinder(Finder):
+    r"""Queryfinder."""
+
+    def __init__(
+        self,
+        query: Query,
+        message: str = "",
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+    ) -> None:
+        r"""Init.
+
+        :param query:
+        :type query: Query
+        :param message:
+        :type message: str
+        :param severity:
+        :type severity: DiagnosticSeverity
+        :rtype: None
+        """
+        self.query = query
+        super().__init__(message, severity)
+
+    def find_all(
+        self, uri: str, tree: Tree | None = None, reset: bool = True
+    ) -> list[UNI]:
+        r"""Find all.
+
+        :param uri:
+        :type uri: str
+        :param tree:
+        :type tree: Tree | None
+        :param reset:
+        :type reset: bool
+        :rtype: list[UNI]
+        """
+        tree = self.prepare(uri, tree, reset)
+        captures = self.query.captures(tree.root_node)
+        return self.captures2unis(captures, uri)
+
+    def captures2unis(
+        self, captures: list[tuple[Node, str]], uri: str
+    ) -> list[UNI]:
+        r"""Captures2unis.
+
+        :param captures:
+        :type captures: list[tuple[Node, str]]
+        :param uri:
+        :type uri: str
+        :rtype: list[UNI]
+        """
+        return [self.captures2uni(capture, uri) for capture in captures]
+
+    def captures2uni(self, capture: tuple[Node, str], uri: str) -> UNI:
+        r"""Captures2uni.
+
+        :param capture:
+        :type capture: tuple[Node, str]
+        :param uri:
+        :type uri: str
+        :rtype: UNI
+        """
+        return UNI(uri, capture[0])
