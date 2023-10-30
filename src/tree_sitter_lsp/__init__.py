@@ -314,7 +314,7 @@ class Finder:
 
     def prepare(
         self, uri: str, tree: Tree | None = None, reset: bool = True
-    ) -> TreeCursor:
+    ) -> Tree:
         r"""Prepare.
 
         :param uri:
@@ -323,7 +323,7 @@ class Finder:
         :type tree: Tree | None
         :param reset:
         :type reset: bool
-        :rtype: TreeCursor
+        :rtype: Tree
         """
         if reset:
             self.reset()
@@ -331,7 +331,7 @@ class Finder:
             tree = self.uri2tree(uri)
         if tree is None:
             raise TypeError
-        return tree.walk()
+        return tree
 
     def find(
         self, uri: str, tree: Tree | None = None, reset: bool = True
@@ -346,7 +346,7 @@ class Finder:
         :type reset: bool
         :rtype: UNI | None
         """
-        cursor = self.prepare(uri, tree, reset)
+        cursor = self.prepare(uri, tree, reset).walk()
         _uri = self.move_cursor(uri, cursor, False)
         if _uri is not None:
             return UNI(_uri, cursor.node)
@@ -366,7 +366,7 @@ class Finder:
         :type reset: bool
         :rtype: list[UNI]
         """
-        cursor = self.prepare(uri, tree, reset)
+        cursor = self.prepare(uri, tree, reset).walk()
         while True:
             _uri = self.move_cursor(uri, cursor, True)
             if _uri is not None:
