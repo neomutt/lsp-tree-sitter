@@ -3,10 +3,9 @@ r"""Utils
 
 Some common functions used by formatters and linters.
 """
-import json
 import os
 import sys
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 from . import Finder
 
@@ -60,21 +59,31 @@ def get_finders(
 
 
 def pprint(
-    obj: object, filetype: str = "json", *args: Any, **kwargs: Any
+    obj: object,
+    filetype: Literal["json", "yaml", "toml"] = "json",
+    *args: Any,
+    **kwargs: Any,
 ) -> None:
     r"""Pprint.
 
     :param obj:
     :type obj: object
     :param filetype:
-    :type filetype: str
+    :type filetype: Literal["json", "yaml", "toml"]
     :param args:
     :type args: Any
     :param kwargs:
     :type kwargs: Any
     :rtype: None
     """
-    text = json.dumps(obj, *args, **kwargs)
+    if filetype == "json":
+        from json import dumps
+    elif filetype == "yaml":
+        from yaml import dump as dumps
+    elif filetype == "toml":
+        from tomli_w import dumps
+
+    text = dumps(obj, *args, **kwargs)
     TERM = os.getenv("TERM", "xterm")
     if not sys.stdout.isatty():
         TERM = "dumb"

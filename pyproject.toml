@@ -49,8 +49,23 @@ tree_sitter_lsp = ["py.typed", "assets/**"]
 file = "requirements.txt"
 
 # begin: scripts/update-pyproject.toml.pl
+[tool.setuptools.dynamic.optional-dependencies.colorize]
+file = "requirements/colorize.txt"
+
 [tool.setuptools.dynamic.optional-dependencies.dev]
 file = "requirements/dev.txt"
+
+[tool.setuptools.dynamic.optional-dependencies.languages]
+file = "requirements/languages.txt"
+
+[tool.setuptools.dynamic.optional-dependencies.misc]
+file = "requirements/misc.txt"
+
+[tool.setuptools.dynamic.optional-dependencies.toml]
+file = "requirements/toml.txt"
+
+[tool.setuptools.dynamic.optional-dependencies.yaml]
+file = "requirements/yaml.txt"
 # end: scripts/update-pyproject.toml.pl
 
 [tool.setuptools_scm]

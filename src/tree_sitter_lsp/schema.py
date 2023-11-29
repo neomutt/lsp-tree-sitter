@@ -2,7 +2,7 @@ r"""Schema
 ==========
 """
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 from lsprotocol.types import Position, Range
 from tree_sitter import Node, Tree
@@ -110,6 +110,20 @@ class Trie:
         :rtype: "Trie"
         """
         return cls.from_node(tree.root_node, None)
+
+    @classmethod
+    def from_file(cls, file: str, parse: Callable[[bytes], Tree]) -> "Trie":
+        r"""From file.
+
+        :param file:
+        :type file: str
+        :param parse:
+        :type parse: Callable[[bytes], Tree]
+        :rtype: "Trie"
+        """
+        with open(file, "rb") as f:
+            text = f.read()
+        return cls.from_tree(parse(text))
 
     @classmethod
     def from_node(cls, node: Node, parent: "Trie | None") -> "Trie":
