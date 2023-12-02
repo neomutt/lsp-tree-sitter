@@ -4,21 +4,53 @@ r"""Complete
 import os
 from glob import glob
 from pathlib import Path
+from typing import Any
 
 from lsprotocol.types import CompletionItem, CompletionItemKind, CompletionList
 
 from . import UNI
 
 
-def get_completion_list_by_uri(
-    uri: str, text: str = "", expr: str = "*"
+def get_completion_list_by_enum(
+    text: str, property: dict[str, Any]
 ) -> CompletionList:
-    r"""Get completion list by uri.
+    r"""Get completion list by enum. ``property.items`` must contains
+    ``enum`` or ``oneOf.enum``. Not ``anyOf`` or ``allOf`` because ``enum``
+    shouldn't be satisfied with other conditions.
 
-    :param uri:
-    :type uri: str
     :param text:
     :type text: str
+    :param property:
+    :type property: dict[str, Any]
+    :rtype: CompletionList
+    """
+    # if contains .items, it is an array
+    property = property.get("items", property)
+    enum = property.get("enum", property.get("oneOf", [{}])[0].get("enum", []))
+    return CompletionList(
+        False,
+        [
+            CompletionItem(
+                k,
+                kind=CompletionItemKind.Constant,
+                insert_text=k,
+            )
+            for k in enum
+            if k.startswith(text)
+        ],
+    )
+
+
+def get_completion_list_by_uri(
+    text: str, uri: str, expr: str = "*"
+) -> CompletionList:
+    r"""Get completion list by ``uri``. Don't need to filter by ``text``
+    because all results are started with ``text``.
+
+    :param text:
+    :type text: str
+    :param uri:
+    :type uri: str
     :param expr:
     :type expr: str
     :rtype: CompletionList
