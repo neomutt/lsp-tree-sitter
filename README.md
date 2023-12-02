@@ -55,6 +55,12 @@ Some example language servers:
   for `Makefile`
 - [requirements-language-server](https://github.com/Freed-Wu/requirements-language-server/):
   for `requirements.txt`
+- [mutt-language-server](https://github.com/neomutt/mutt-language-server):
+  for [(neo)mutt](https://github.com/neomutt/neomutt)'s (neo)muttrc
+- [zathura-language-server](https://github.com/Freed-Wu/zathura-language-server):
+  for [zathura](https://github.com/pwmt/zathura)'s zathurarc
+- [bitbake-language-server](https://github.com/Freed-Wu/bitbake-language-server):
+  for [bitbake](https://docs.yoctoproject.org/bitbake/index.html)
 
 Read
 [![readthedocs](https://shields.io/readthedocs/tree-sitter-lsp)](https://tree-sitter-lsp.readthedocs.io)
