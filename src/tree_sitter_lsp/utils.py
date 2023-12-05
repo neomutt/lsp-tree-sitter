@@ -58,6 +58,39 @@ def get_finders(
     return finders, finder_classes
 
 
+def pygmentize(text: str, filetype: str) -> None:
+    r"""Pygmentize.
+
+    :param text:
+    :type text: str
+    :param filetype:
+    :type filetype: str
+    :rtype: None
+    """
+    TERM = os.getenv("TERM", "xterm")
+    if not sys.stdout.isatty():
+        TERM = "dumb"
+    try:
+        from pygments import highlight
+        from pygments.formatters import get_formatter_by_name
+        from pygments.lexers import get_lexer_by_name
+
+        if TERM.split("-")[-1] == "256color":
+            formatter_name = "terminal256"
+        elif TERM != "dumb":
+            formatter_name = "terminal"
+        else:
+            formatter_name = None
+        if formatter_name:
+            formatter = get_formatter_by_name(formatter_name)
+            lexer = get_lexer_by_name(filetype)
+            print(highlight(text, lexer, formatter), end="")
+    except ImportError:
+        TERM = "dumb"
+    if TERM == "dumb":
+        print(text)
+
+
 def pprint(
     obj: object,
     filetype: Literal["json", "yaml", "toml"] = "json",
@@ -84,25 +117,4 @@ def pprint(
         from tomli_w import dumps
 
     text = dumps(obj, *args, **kwargs)
-    TERM = os.getenv("TERM", "xterm")
-    if not sys.stdout.isatty():
-        TERM = "dumb"
-    try:
-        from pygments import highlight
-        from pygments.formatters import get_formatter_by_name
-        from pygments.lexers import get_lexer_by_name
-
-        if TERM.split("-")[-1] == "256color":
-            formatter_name = "terminal256"
-        elif TERM != "dumb":
-            formatter_name = "terminal"
-        else:
-            formatter_name = None
-        if formatter_name:
-            formatter = get_formatter_by_name(formatter_name)
-            lexer = get_lexer_by_name(filetype)
-            print(highlight(text, lexer, formatter), end="")
-    except ImportError:
-        TERM = "dumb"
-    if TERM == "dumb":
-        print(text)
+    pygmentize(text, filetype)
