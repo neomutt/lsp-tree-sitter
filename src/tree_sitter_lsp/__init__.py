@@ -115,10 +115,8 @@ class UNI:
         :type kwargs: Any
         :rtype: Diagnostic
         """
-        _range = self.get_range()
-        _range.end.character -= 1
         return Diagnostic(
-            _range,
+            self.get_range(),
             Template(message).render(uni=self, **kwargs),
             severity,
         )
