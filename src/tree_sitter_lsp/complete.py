@@ -6,7 +6,13 @@ from glob import glob
 from pathlib import Path
 from typing import Any
 
-from lsprotocol.types import CompletionItem, CompletionItemKind, CompletionList
+from lsprotocol.types import (
+    CompletionItem,
+    CompletionItemKind,
+    CompletionList,
+    MarkupContent,
+    MarkupKind,
+)
 
 from . import UNI
 
@@ -42,7 +48,7 @@ def get_completion_list_by_enum(
 
 
 def get_completion_list_by_uri(
-    text: str, uri: str, expr: str = "*"
+    text: str, uri: str, exprs: dict[str, str] | None = None
 ) -> CompletionList:
     r"""Get completion list by ``uri``. Don't need to filter by ``text``
     because all results are started with ``text``.
@@ -51,30 +57,36 @@ def get_completion_list_by_uri(
     :type text: str
     :param uri:
     :type uri: str
-    :param expr:
-    :type expr: str
+    :param exprs:
+    :type exprs: dict[str, str] | None
     :rtype: CompletionList
     """
+    if exprs is None:
+        exprs = {"*": "text", "**/*": "text"}
     dirname = os.path.dirname(UNI.uri2path(uri))
-    return CompletionList(
-        False,
-        [
-            CompletionItem(
-                x.rpartition(dirname + os.path.sep)[-1],
-                kind=CompletionItemKind.File
-                if os.path.isfile(x)
-                else CompletionItemKind.Folder,
-                documentation=Path(x).read_text()
-                if os.path.isfile(x)
-                else "\n".join(os.listdir(x)),
-                insert_text=x.rpartition(dirname + os.path.sep)[-1],
-            )
-            for x in [
-                file + ("" if os.path.isfile(file) else os.path.sep)
-                for file in glob(
-                    os.path.join(dirname, text + f"**{os.path.sep}" + expr),
-                    recursive=True,
+    prefix = os.path.join(dirname, text)
+    items = []
+    for expr, filetype in exprs.items():
+        for file in glob(os.path.join(dirname, expr), recursive=True):
+            if not file.startswith(prefix):
+                continue
+            if os.path.isdir(file):
+                file += os.path.sep
+            items += [
+                CompletionItem(
+                    file.rpartition(dirname + os.path.sep)[-1],
+                    kind=CompletionItemKind.File
+                    if os.path.isfile(file)
+                    else CompletionItemKind.Folder,
+                    documentation=MarkupContent(
+                        MarkupKind.Markdown,
+                        f"""```{filetype}
+{Path(file).read_text()}
+```""",
+                    )
+                    if os.path.isfile(file)
+                    else "\n".join(os.listdir(file)),
+                    insert_text=file.rpartition(dirname + os.path.sep)[-1],
                 )
             ]
-        ],
-    )
+    return CompletionList(False, items)
