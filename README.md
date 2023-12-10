@@ -37,13 +37,7 @@
 [![pypi/implementation](https://shields.io/pypi/implementation/tree-sitter-lsp)](https://pypi.org/project/tree-sitter-lsp/#files)
 [![pypi/pyversions](https://shields.io/pypi/pyversions/tree-sitter-lsp)](https://pypi.org/project/tree-sitter-lsp/#files)
 
-A library aimed to create language servers which connect:
-
-- [tree-sitter](https://tree-sitter.github.io/tree-sitter/)
-- [language server protocol](https://microsoft.github.io/language-server-protocol/specifications/specification-current)
-- [json schema](https://json-schema.org/specification)
-
-Some example language servers:
+A core library to support many language servers:
 
 - [termux-language-server](https://github.com/termux/termux-language-server/):
   for some specific bash scripts:
@@ -51,17 +45,19 @@ Some example language servers:
   - [`PKGBUILD`](https://wiki.archlinux.org/title/PKGBUILD)
   - [`*.ebuild`](https://dev.gentoo.org/~zmedico/portage/doc/man/ebuild.5.html)
   - ...
+- [mutt-language-server](https://github.com/neomutt/mutt-language-server):
+  for [(neo)mutt](https://github.com/neomutt/neomutt)'s (neo)muttrc
 - [autotools-language-server](https://github.com/Freed-Wu/autotools-language-server/):
   for `Makefile`
 - [requirements-language-server](https://github.com/Freed-Wu/requirements-language-server/):
   for `requirements.txt`
-- [mutt-language-server](https://github.com/neomutt/mutt-language-server):
-  for [(neo)mutt](https://github.com/neomutt/neomutt)'s (neo)muttrc
 - [zathura-language-server](https://github.com/Freed-Wu/zathura-language-server):
   for [zathura](https://github.com/pwmt/zathura)'s zathurarc
 - [bitbake-language-server](https://github.com/Freed-Wu/bitbake-language-server):
   for [bitbake](https://docs.yoctoproject.org/bitbake/index.html)
 
-Read
-[![readthedocs](https://shields.io/readthedocs/tree-sitter-lsp)](https://tree-sitter-lsp.readthedocs.io)
-to know more.
+which connect:
+
+- [tree-sitter](https://tree-sitter.github.io/tree-sitter/)
+- [language server protocol](https://microsoft.github.io/language-server-protocol/specifications/specification-current)
+- [json schema](https://json-schema.org/specification)
