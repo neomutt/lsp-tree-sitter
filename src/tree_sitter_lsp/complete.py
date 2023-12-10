@@ -21,8 +21,7 @@ def get_completion_list_by_enum(
     text: str, property: dict[str, Any]
 ) -> CompletionList:
     r"""Get completion list by enum. ``property.items`` must contains
-    ``enum`` or ``oneOf.enum``. Not ``anyOf`` or ``allOf`` because ``enum``
-    shouldn't be satisfied with other conditions.
+    ``enum``, ``oneOf.enum``, ``anyOf.enum`` or ``allOf``.
 
     :param text:
     :type text: str
@@ -32,7 +31,12 @@ def get_completion_list_by_enum(
     """
     # if contains .items, it is an array
     property = property.get("items", property)
-    enum = property.get("enum", property.get("oneOf", [{}])[0].get("enum", []))
+    enum = property.get(
+        "enum",
+        property.get(
+            "oneOf", property.get("anyOf", property.get("allOf", [{}]))
+        )[0].get("enum", []),
+    )
     return CompletionList(
         False,
         [
