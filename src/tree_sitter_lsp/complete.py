@@ -37,18 +37,21 @@ def get_completion_list_by_enum(
             "oneOf", property.get("anyOf", property.get("allOf", [{}]))
         )[0].get("enum", []),
     )
-    return CompletionList(
-        False,
-        [
-            CompletionItem(
-                k,
-                kind=CompletionItemKind.Constant,
-                insert_text=k,
-            )
-            for k in enum
-            if k.startswith(text)
-        ],
-    )
+    items = []
+    for k in enum:
+        if k is None:
+            continue
+        if not isinstance(k, str):
+            k = str(k)
+        if k.startswith(text):
+            items += [
+                CompletionItem(
+                    k,
+                    kind=CompletionItemKind.Constant,
+                    insert_text=k,
+                )
+            ]
+    return CompletionList(False, items)
 
 
 def get_completion_list_by_uri(
