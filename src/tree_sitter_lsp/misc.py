@@ -3,6 +3,9 @@ r"""Misc
 """
 from gzip import decompress
 from itertools import chain
+from shlex import split
+from subprocess import check_output  # nosec: B404
+from typing import Literal
 from urllib import request
 
 from bs4 import BeautifulSoup, FeatureNotFound
@@ -20,7 +23,9 @@ def get_man(filename: str) -> str:
     :type filename: str
     :rtype: str
     """
-    filename += ".5*"
+    if filename.find(".") == -1:
+        filename += ".5"
+    filename += "*"
     text = b""
     path = ""
     for path in chain(
@@ -83,11 +88,15 @@ def html2soup(html: str) -> BeautifulSoup:
     return soup
 
 
-def get_soup(uri: str) -> BeautifulSoup:
+def get_soup(
+    uri: str, method: Literal["pandoc", "groff"] = "pandoc"
+) -> BeautifulSoup:
     r"""Get soup.
 
     :param uri:
     :type uri: str
+    :param method:
+    :type method: Literal["pandoc", "groff"]
     :rtype: BeautifulSoup
     """
     if uri_scheme(uri):
@@ -95,7 +104,14 @@ def get_soup(uri: str) -> BeautifulSoup:
             html = f.read()
     else:
         text = get_man(uri)
-        html = convert_text(text, "html", "man")
+        if method == "pandoc":
+            html = convert_text(text, "html", "man")
+        else:
+            html = check_output(  # nosec: B603
+                split("groff -mman -Thtml"),
+                input=text.encode(),
+                universal_newlines=True,
+            )
     return html2soup(html)
 
 
