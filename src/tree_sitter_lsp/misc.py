@@ -3,7 +3,6 @@ r"""Misc
 """
 from gzip import decompress
 from itertools import chain
-from shlex import split
 from subprocess import check_output  # nosec: B404
 from typing import Literal
 from urllib import request
@@ -92,14 +91,21 @@ def html2soup(html: str) -> BeautifulSoup:
 
 
 def get_soup(
-    uri: str, method: Literal["pandoc", "groff"] = "pandoc"
+    uri: str,
+    converter: Literal["pandoc", "groff"] = "pandoc",
+    filetype: str = "man",
 ) -> BeautifulSoup:
     r"""Get soup.
 
+    pandoc doesn't support mdoc.
+    `<https://github.com/jgm/pandoc/issues/9056>`_
+
     :param uri:
     :type uri: str
-    :param method:
-    :type method: Literal["pandoc", "groff"]
+    :param converter:
+    :type converter: Literal["pandoc", "groff"]
+    :param filetype:
+    :type filetype: str
     :rtype: BeautifulSoup
     """
     if uri_scheme(uri):
@@ -107,11 +113,11 @@ def get_soup(
             html = f.read()
     else:
         text = get_man(uri)
-        if method == "pandoc":
-            html = convert_text(text, "html", "man")
+        if converter == "pandoc":
+            html = convert_text(text, "html", filetype)
         else:
-            html = check_output(  # nosec: B603
-                split("groff -mman -Thtml"),
+            html = check_output(  # nosec: B603 B607
+                ["groff", "-m", filetype, "-Thtml"],
                 input=text.encode(),
             ).decode()
     return html2soup(html)
