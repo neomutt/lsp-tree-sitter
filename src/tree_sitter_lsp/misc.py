@@ -23,14 +23,17 @@ def get_man(filename: str) -> str:
     :type filename: str
     :rtype: str
     """
+    number = 5
     if filename.find(".") == -1:
-        filename += ".5"
+        filename += f".{number}"
+    else:
+        number = int(filename.split(".")[-1])
     filename += "*"
     text = b""
     path = ""
     for path in chain(
-        (user_data_path("man") / "man5").glob(filename),
-        (site_data_path("man") / "man5").glob(filename),
+        (user_data_path("man") / f"man{number}").glob(filename),
+        (site_data_path("man") / f"man{number}").glob(filename),
     ):
         try:
             with open(path, "rb") as f:
@@ -41,7 +44,7 @@ def get_man(filename: str) -> str:
     if text == b"":
         raise FileNotFoundError
     _, _, ext = str(path).rpartition(".")
-    if ext != "5":
+    if ext != str(number):
         text = decompress(text)
     return text.decode()
 
@@ -110,8 +113,7 @@ def get_soup(
             html = check_output(  # nosec: B603
                 split("groff -mman -Thtml"),
                 input=text.encode(),
-                universal_newlines=True,
-            )
+            ).decode()
     return html2soup(html)
 
 
