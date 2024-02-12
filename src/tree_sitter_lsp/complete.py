@@ -1,6 +1,7 @@
 r"""Complete
 ============
 """
+
 import os
 from glob import glob
 from pathlib import Path
@@ -82,17 +83,21 @@ def get_completion_list_by_uri(
             items += [
                 CompletionItem(
                     file.rpartition(dirname + os.path.sep)[-1],
-                    kind=CompletionItemKind.File
-                    if os.path.isfile(file)
-                    else CompletionItemKind.Folder,
-                    documentation=MarkupContent(
-                        MarkupKind.Markdown,
-                        f"""```{filetype}
+                    kind=(
+                        CompletionItemKind.File
+                        if os.path.isfile(file)
+                        else CompletionItemKind.Folder
+                    ),
+                    documentation=(
+                        MarkupContent(
+                            MarkupKind.Markdown,
+                            f"""```{filetype}
 {Path(file).read_text()}
 ```""",
-                    )
-                    if os.path.isfile(file)
-                    else "\n".join(os.listdir(file)),
+                        )
+                        if os.path.isfile(file)
+                        else "\n".join(os.listdir(file))
+                    ),
                     insert_text=file.rpartition(dirname + os.path.sep)[-1],
                 )
             ]

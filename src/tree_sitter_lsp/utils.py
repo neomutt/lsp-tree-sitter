@@ -3,6 +3,7 @@ r"""Utils
 
 Some common functions used by formatters and linters.
 """
+
 import os
 import sys
 from typing import Any, Callable, Literal

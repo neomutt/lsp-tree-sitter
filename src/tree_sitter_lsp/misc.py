@@ -1,6 +1,7 @@
 r"""Misc
 ========
 """
+
 from gzip import decompress
 from itertools import chain
 from subprocess import check_output  # nosec: B404

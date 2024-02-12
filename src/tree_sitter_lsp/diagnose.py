@@ -5,6 +5,7 @@ Wrap
 ``Diagnostic <https://microsoft.github.io/language-server-protocol/specifications/specification-current#diagnostic>``_
 to a linter.
 """
+
 import sys
 from typing import Callable, Literal
 
