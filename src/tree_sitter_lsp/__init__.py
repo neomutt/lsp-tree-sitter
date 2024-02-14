@@ -90,6 +90,13 @@ class UNI:
         """
         return self.uri2path(self.uri)
 
+    def get_uri(self) -> str:
+        r"""Get uri.
+
+        :rtype: str
+        """
+        return os.path.join(os.path.dirname(self.uri), self.get_text())
+
     @staticmethod
     def uri2path(uri: str) -> str:
         r"""Uri2path.
@@ -133,7 +140,9 @@ class UNI:
         """
         return TextEdit(self.get_range(), new_text)
 
-    def get_document_link(self, target: str, **kwargs) -> DocumentLink:
+    def get_document_link(
+        self, target: str = "{{uni.get_uri()}}", **kwargs
+    ) -> DocumentLink:
         r"""Get document link.
 
         :param target:
@@ -423,7 +432,7 @@ class Finder:
         return []
 
     def get_document_links(
-        self, uri: str, tree: Tree, template: str
+        self, uri: str, tree: Tree, template: str = "{{uni.get_uri()}}"
     ) -> list[DocumentLink]:
         r"""Get document links.
 
