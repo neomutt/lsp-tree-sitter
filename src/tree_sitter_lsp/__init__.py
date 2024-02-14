@@ -17,7 +17,7 @@ from lsprotocol.types import (
     Range,
     TextEdit,
 )
-from pygls.uris import to_fs_path
+from pygls.uris import from_fs_path, to_fs_path
 from tree_sitter import Node, Tree, TreeCursor
 
 # maximum of recursive search
@@ -95,7 +95,14 @@ class UNI:
 
         :rtype: str
         """
-        return os.path.join(os.path.dirname(self.uri), self.get_text())
+        if path := from_fs_path(
+            os.path.join(
+                os.path.dirname(self.get_path()),
+                os.path.expandvars(os.path.expanduser(self.get_text())),
+            )
+        ):
+            return path
+        raise TypeError
 
     @staticmethod
     def uri2path(uri: str) -> str:
