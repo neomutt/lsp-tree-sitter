@@ -5,8 +5,10 @@ Wrap
 ``Diagnostic <https://microsoft.github.io/language-server-protocol/specifications/specification-current#diagnostic>``_
 to a linter.
 """
+
 import sys
-from typing import Callable, Literal
+from collections.abc import Callable
+from typing import Literal
 
 from lsprotocol.types import Diagnostic, DiagnosticSeverity
 from tree_sitter import Tree
@@ -76,13 +78,11 @@ def count_level(
     :type level: DiagnosticSeverity
     :rtype: int
     """
-    return len(
-        [
-            diagnostic
-            for diagnostic in diagnostics
-            if diagnostic.severity and diagnostic.severity <= level
-        ]
-    )
+    return len([
+        diagnostic
+        for diagnostic in diagnostics
+        if diagnostic.severity and diagnostic.severity <= level
+    ])
 
 
 class _Colorama:
@@ -124,7 +124,16 @@ def diagnostics2linter_messages(
     if colors is None:
         colors = [Fore.RESET, Fore.RED, Fore.YELLOW, Fore.BLUE, Fore.GREEN]
     return [
-        f"{Fore.MAGENTA}{path}{Fore.RESET}:{Fore.CYAN}{diagnostic.range.start.line + 1}:{diagnostic.range.start.character + 1}{Fore.RESET}-{Fore.CYAN}{diagnostic.range.end.line + 1}:{diagnostic.range.end.character + 1}{Fore.RESET}:{colors[diagnostic.severity if diagnostic.severity else 0]}{str(diagnostic.severity).split('.')[-1].lower()}{Fore.RESET}: {diagnostic.message}"
+        (
+            f"{Fore.MAGENTA}{path}{Fore.RESET}:"
+            f"{Fore.CYAN}{diagnostic.range.start.line + 1}:"
+            f"{diagnostic.range.start.character + 1}{Fore.RESET}-"
+            f"{Fore.CYAN}{diagnostic.range.end.line + 1}:"
+            f"{diagnostic.range.end.character + 1}{Fore.RESET}:"
+            f"{colors[diagnostic.severity if diagnostic.severity else 0]}"
+            f"{str(diagnostic.severity).split('.')[-1].lower()}{Fore.RESET}"
+            f": {diagnostic.message}"
+        )
         for diagnostic in diagnostics
     ]
 

@@ -1,8 +1,10 @@
 r"""Schema
 ==========
 """
+
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from lsprotocol.types import Position, Range
 from tree_sitter import Node, Tree
