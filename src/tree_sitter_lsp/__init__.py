@@ -1,6 +1,7 @@
 r"""Tree-sitter LSP
 ===================
 """
+
 import os
 from copy import deepcopy
 from dataclasses import dataclass
@@ -19,8 +20,6 @@ from lsprotocol.types import (
 from pygls.uris import to_fs_path
 from tree_sitter import Node, Tree, TreeCursor
 
-from ._version import __version__, __version_tuple__
-
 # maximum of recursive search
 LEVEL = 5
 
@@ -37,7 +36,11 @@ class UNI:
 
         :rtype: str
         """
-        return f"{self.get_text()}@{self.uri}:{self.node.start_point[0] + 1}:{self.node.start_point[1] + 1}-{self.node.end_point[0] + 1}:{self.node.end_point[1]}"
+        return (
+            f"{self.get_text()}@{self.uri}:"
+            f"{self.node.start_point[0] + 1}:{self.node.start_point[1] + 1}-"
+            f"{self.node.end_point[0] + 1}:{self.node.end_point[1]}"
+        )
 
     def get_text(self) -> str:
         r"""Get text.

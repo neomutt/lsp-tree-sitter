@@ -3,9 +3,11 @@ r"""Utils
 
 Some common functions used by formatters and linters.
 """
+
 import os
 import sys
-from typing import Any, Callable, Literal
+from collections.abc import Callable
+from typing import Any, Literal
 
 from . import Finder
 
@@ -17,7 +19,7 @@ def get_paths(
 
     :param paths:
     :type paths: list[str]
-    :param get_filetype: A function returning ``Literal["filetype1", "filetype2", ...] | Literal[""]``
+    :param get_filetype: return ``Literal["ft1", "ft2", ...] | Literal[""]``
     :type get_filetype: Callable[[str], str]
     :rtype: dict[str, list[str]]
     """

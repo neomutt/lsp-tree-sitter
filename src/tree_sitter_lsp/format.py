@@ -5,7 +5,8 @@ Wrap
 ``Document Formatting <https://microsoft.github.io/language-server-protocol/specifications/specification-current#textDocument_formatting>``_
 to a formatter.
 """
-from typing import Callable
+
+from collections.abc import Callable
 
 from lsprotocol.types import Position, Range, TextEdit
 from tree_sitter import Tree
