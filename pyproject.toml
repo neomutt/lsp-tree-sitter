@@ -55,9 +55,6 @@ file = "requirements/colorize.txt"
 [tool.setuptools.dynamic.optional-dependencies.dev]
 file = "requirements/dev.txt"
 
-[tool.setuptools.dynamic.optional-dependencies.languages]
-file = "requirements/languages.txt"
-
 [tool.setuptools.dynamic.optional-dependencies.misc]
 file = "requirements/misc.txt"
 
