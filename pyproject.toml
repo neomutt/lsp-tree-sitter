@@ -38,9 +38,9 @@ text = "GPL v3"
 
 [project.urls]
 Homepage = "https://tree-sitter-lsp.readthedocs.io"
-Download = "https://github.com/Freed-Wu/tree-sitter-lsp/releases"
-"Bug Report" = "https://github.com/Freed-Wu/tree-sitter-lsp/issues"
-Source = "https://github.com/Freed-Wu/tree-sitter-lsp"
+Download = "https://github.com/neomutt/tree-sitter-lsp/releases"
+"Bug Report" = "https://github.com/neomutt/tree-sitter-lsp/issues"
+Source = "https://github.com/neomutt/tree-sitter-lsp"
 
 [tool.setuptools.package-data]
 tree_sitter_lsp = ["py.typed", "assets/**"]
