@@ -55,22 +55,7 @@ I've had enough of writing many DSLs in my editor without any LSP support
   - ...
 - [mutt-language-server](https://github.com/neomutt/mutt-language-server):
   for [(neo)mutt](https://github.com/neomutt/neomutt)'s (neo)muttrc
-- [zathura-language-server](https://github.com/Freed-Wu/zathura-language-server):
-  for [zathura](https://github.com/pwmt/zathura)'s zathurarc
-- [tmux-language-server](https://github.com/Freed-Wu/tmux-language-server):
-  for [tmux](https://github.com/tmux/tmux)'s `tmux.conf`
-- [requirements-language-server](https://github.com/Freed-Wu/requirements-language-server/):
-  for `requirements.txt`
-- [autotools-language-server](https://github.com/Freed-Wu/autotools-language-server/):
-  for `Makefile`
-- [sublime-syntax-language-server](https://github.com/Freed-Wu/sublime-syntax-language-server):
-  for sublime syntax's test file `syntax_test_*`
-- [expect-language-server](https://github.com/Freed-Wu/expect-language-server):
-  for [expect](https://wiki.tcl-lang.org/page/Expect)
-- [xilinx-language-server](https://github.com/Freed-Wu/xilinx-language-server):
-  for xilinx's xsdb, xsct
-- [translate-shell](https://github.com/Freed-Wu/translate-shell):
-  translate the word under the cursor
+- [More](https://github.com/Freed-Wu?tab=repositories&q=lsp-server)
 
 ## What does this library provide
 
