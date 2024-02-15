@@ -59,23 +59,6 @@ I've had enough of writing many DSLs in my editor without any LSP support
 
 ## What does this library provide
 
-### Finders
-
-Some finders to find the required node in tree-sitter's AST.
-Such as, if you want to get the node under the cursor:
-
-```python
-@self.feature(TEXT_DOCUMENT_COMPLETION)
-def completions(params: CompletionParams) -> CompletionList:
-    document = self.workspace.get_document(params.text_document.uri)
-    uni = PositionFinder(params.position, right_equal=True).find(
-        document.uri, self.trees[document.uri]
-    )
-    # ...
-```
-
-UNI (Universal Node Identifier) is URI + node.
-
 ### Schema
 
 A `Trie` to convert a file to a json, then you can use json schema to validate
@@ -83,14 +66,16 @@ it to get diagnostics.
 
 Take
 [termux-language-server](https://github.com/termux/termux-language-server/) as
-an example. This is a `PKGBUILD`:
+an example.
+
+`PKGBUILD`:
 
 ```sh
 pkgname=hello
 pkgver=0.0.1
 pkgrel=1
 pkgdesc="hello"
-arch=(any)
+arch=(wrong_arch)
 license=(GPL3)
 
 build() {
@@ -116,7 +101,7 @@ termux-language-server --convert PKGBUILD
   "pkgrel": "1",
   "pkgdesc": "hello",
   "arch": [
-    "any"
+    "wrong_arch"
   ],
   "license": [
     "GPL3"
@@ -126,9 +111,69 @@ termux-language-server --convert PKGBUILD
 }
 ```
 
-So, we can validate the json by a json schema. For termux-language-server,
-these json schemas are
-[here](https://github.com/termux/termux-language-server/tree/main/src/termux_language_server/assets/json).
+So, we can validate the json by [a json schema](https://github.com/termux/termux-language-server/tree/main/src/termux_language_server/assets/json):
+
+<!-- markdownlint-disable MD013 -->
+
+```sh
+$ termux-language-server --check PKGBUILD
+PKGBUILD:5:7-5:17:error: 'wrong_arch' is not one of ['any', 'pentium4', 'i486', 'i686', 'x86_64', 'x86_64_v3', 'arm', 'armv6h', 'armv7h', 'armv8', 'aarch64']
+```
+
+<!-- markdownlint-enable MD013 -->
+
+![PKGBUILD](https://github.com/neomutt/tree-sitter-lsp/assets/32936898/58614996-bd8a-4e27-b573-87346c82ea2a)
+
+Sometimes it will be more complicated:
+
+`neomuttrc`:
+
+```neomuttrc
+set allow_ansi=yes sleep_time = no ispell = aspell
+set query_command = 'mutt_ldap_query.pl %s'
+```
+
+```sh
+mutt-language-server --convert neomuttrc
+```
+
+```json
+{
+  "set": {
+    "allow_ansi": "yes",
+    "sleep_time": "no",
+    "ispell": "aspell",
+    "query_command": "mutt_ldap_query.pl %s"
+  }
+}
+```
+
+```sh
+$ mutt-language-server --check neomuttrc
+neomuttrc:1:33-1:35:error: 'no' is not of type 'number'
+```
+
+![neomuttrc](https://github.com/neomutt/tree-sitter-lsp/assets/32936898/75ebf0c1-784a-43db-ae11-59783af57b4f)
+
+We put the result to the json's `.set` not `.` just in order to reserve the
+other keys for other usages.
+
+### Finders
+
+Some finders to find the required node in tree-sitter's AST.
+Such as, if you want to get the node under the cursor:
+
+```python
+@self.feature(TEXT_DOCUMENT_COMPLETION)
+def completions(params: CompletionParams) -> CompletionList:
+    document = self.workspace.get_document(params.text_document.uri)
+    uni = PositionFinder(params.position, right_equal=True).find(
+        document.uri, self.trees[document.uri]
+    )
+    # ...
+```
+
+UNI (Universal Node Identifier) is URI + node.
 
 ### Utilities
 
