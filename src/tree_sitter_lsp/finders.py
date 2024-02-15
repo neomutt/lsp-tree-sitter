@@ -537,7 +537,7 @@ class SchemaFinder(Finder):
         """
         return validator_for(schema)(schema)
 
-    def get_diagnostics(self, _: str, tree: Tree) -> list[Diagnostic]:
+    def get_diagnostics(self, uri: str, tree: Tree) -> list[Diagnostic]:
         r"""Get diagnostics.
 
         :param _:

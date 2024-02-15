@@ -26,10 +26,19 @@ LEVEL = 5
 
 @dataclass
 class UNI:
-    r"""Unified node identifier."""
+    r"""Unified node identifier.
+
+    ``uri`` and ``path`` is document's uri and path.
+    ``get_uri()`` and ``get_path()`` is node's uri and path which are
+    calculated by ``uri`` and ``path``, can throw ``TypeError`` when ``uri`` is
+    wrong. ``path`` can be ``None`` for wrong ``uri``.
+    """
 
     uri: str
     node: Node
+
+    def __post_init__(self):
+        self.path = to_fs_path(self.uri)
 
     def __str__(self) -> str:
         r"""Str.
@@ -83,27 +92,6 @@ class UNI:
         """
         return Range(Position(*node.start_point), Position(*node.end_point))
 
-    def get_path(self) -> str:
-        r"""Get path.
-
-        :rtype: str
-        """
-        return self.uri2path(self.uri)
-
-    def get_uri(self) -> str:
-        r"""Get uri.
-
-        :rtype: str
-        """
-        if path := from_fs_path(
-            os.path.join(
-                os.path.dirname(self.get_path()),
-                os.path.expandvars(os.path.expanduser(self.get_text())),
-            )
-        ):
-            return path
-        raise TypeError
-
     @staticmethod
     def uri2path(uri: str) -> str:
         r"""Uri2path.
@@ -115,6 +103,45 @@ class UNI:
         if path := to_fs_path(uri):
             return path
         raise TypeError
+
+    @staticmethod
+    def path2uri(path: str) -> str:
+        r"""Path2uri.
+
+        :param path:
+        :type path: str
+        :rtype: str
+        """
+        if uri := from_fs_path(path):
+            return uri
+        raise TypeError
+
+    def get_path(self) -> str:
+        r"""Get path.
+
+        :rtype: str
+        """
+        if self.path is None:
+            raise TypeError
+        text = os.path.expandvars(os.path.expanduser(self.get_text()))
+        return self.join(self.path, text)
+
+    def get_uri(self) -> str:
+        r"""Get uri.
+
+        :rtype: str
+        """
+        return self.path2uri(self.get_path())
+
+    @staticmethod
+    def join(path, text) -> str:
+        r"""Join document's path and text to get node's path.
+
+        :param path:
+        :param text:
+        :rtype: str
+        """
+        return os.path.join(os.path.dirname(path), text)
 
     def get_diagnostic(
         self,
@@ -161,16 +188,6 @@ class UNI:
             self.get_range(),
             Template(target).render(uni=self, **kwargs),
         )
-
-    @staticmethod
-    def join(path, text) -> str:
-        r"""Join.
-
-        :param path:
-        :param text:
-        :rtype: str
-        """
-        return os.path.join(os.path.dirname(path), text)
 
 
 @dataclass
@@ -248,7 +265,7 @@ class Finder:
         raise NotImplementedError
 
     def uri2tree(self, uri: str) -> Tree | None:
-        r"""Convert URI to tree.
+        r"""Convert URI to tree. Used by ``prepare()``.
 
         :param uri:
         :type uri: str
@@ -261,25 +278,20 @@ class Finder:
             code = f.read()
         return self.parse(code)
 
-    def uni2uri(self, uni: UNI) -> str:
-        r"""Convert UNI to URI.
+    def uni2tree(self, uni: UNI) -> Tree | None:
+        r"""Convert UNI to tree. Used by ``move_cursor()`` to parse
+        recursively. Override it if necessary.
 
         :param uni:
         :type uni: UNI
-        :rtype: str
+        :rtype: Tree | None
         """
-        return uni.join(uni.uri, uni.get_text())
-
-    def uni2path(self, uni: UNI) -> str:
-        r"""Convert UNI to path.
-
-        :param self:
-        :param uni:
-        :type uni: UNI
-        :rtype: str
-        """
-        uri = self.uni2uri(uni)
-        return UNI.uri2path(uri)
+        path = uni.get_path()
+        if not os.path.exists(path):
+            return None
+        with open(path, "rb") as f:
+            code = f.read()
+        return self.parse(code)
 
     def move_cursor(
         self, uri: str, cursor: TreeCursor, is_all: bool = False
@@ -299,8 +311,8 @@ class Finder:
             if self.is_include_node(cursor.node) and self.level < LEVEL:
                 self.level += 1
                 old_uri = uri
-                uri = self.uni2uri(UNI(uri, cursor.node))
-                tree = self.uri2tree(uri)
+                uni = UNI(uri, cursor.node)
+                tree = self.uni2tree(uni)
                 if tree is not None:
                     if is_all:
                         self.find_all(uri, tree, False)
