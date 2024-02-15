@@ -49,32 +49,22 @@ these language servers.
 
 ## Language servers
 
-### Use tree-sitter and json schema
-
 - [termux-language-server](https://github.com/termux/termux-language-server/):
   for some specific bash scripts:
   - [`build.sh`](https://github.com/termux/termux-packages/wiki/Creating-new-package)
   - [`PKGBUILD`](https://wiki.archlinux.org/title/PKGBUILD)
   - [`*.ebuild`](https://dev.gentoo.org/~zmedico/portage/doc/man/ebuild.5.html)
   - ...
+- [mutt-language-server](https://github.com/neomutt/mutt-language-server):
+  for [(neo)mutt](https://github.com/neomutt/neomutt)'s (neo)muttrc
 - [zathura-language-server](https://github.com/Freed-Wu/zathura-language-server):
   for [zathura](https://github.com/pwmt/zathura)'s zathurarc
-
-### Use tree-sitter
-
+- [tmux-language-server](https://github.com/Freed-Wu/tmux-language-server):
+  for [tmux](https://github.com/tmux/tmux)'s `tmux.conf`
 - [requirements-language-server](https://github.com/Freed-Wu/requirements-language-server/):
   for `requirements.txt`
 - [autotools-language-server](https://github.com/Freed-Wu/autotools-language-server/):
   for `Makefile`
-
-### Don't use tree-sitter
-
-- [mutt-language-server](https://github.com/neomutt/mutt-language-server):
-  for [(neo)mutt](https://github.com/neomutt/neomutt)'s (neo)muttrc
-- [bitbake-language-server](https://github.com/Freed-Wu/bitbake-language-server):
-  for [bitbake](https://docs.yoctoproject.org/bitbake/index.html)
-- [tmux-language-server](https://github.com/Freed-Wu/tmux-language-server):
-  for [tmux](https://github.com/tmux/tmux)'s `tmux.conf`
 - [sublime-syntax-language-server](https://github.com/Freed-Wu/sublime-syntax-language-server):
   for sublime syntax's test file `syntax_test_*`
 - [expect-language-server](https://github.com/Freed-Wu/expect-language-server):
