@@ -44,8 +44,6 @@ shared code to this library.
 
 I've had enough of writing many DSLs in my editor without any LSP support
 (completion, hover, ...). So I decide to sacrifice my time to do this work.
-Some [Chinese blogs](https://freed-wu.github.io/tag/lsp/) about how I write
-these language servers.
 
 ## Language servers
 
@@ -154,6 +152,8 @@ markdown and tokenize it in order to generate the json schema.
 
 ## References
 
+- some [Chinese blogs](https://freed-wu.github.io/tag/lsp/) about how I write
+  these language servers
 - [tree-sitter](https://tree-sitter.github.io/tree-sitter/)
 - [language server protocol](https://microsoft.github.io/language-server-protocol/specifications/specification-current)
 - [json schema](https://json-schema.org/specification)
