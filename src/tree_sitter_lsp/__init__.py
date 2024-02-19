@@ -20,6 +20,12 @@ from lsprotocol.types import (
 from pygls.uris import from_fs_path, to_fs_path
 from tree_sitter import Node, Tree, TreeCursor
 
+try:
+    from ._version import __version__, __version_tuple__  # type: ignore
+except ImportError:  # for setuptools-generate
+    __version__ = "rolling"
+    __version_tuple__ = (0, 0, 0, __version__, "")
+
 # maximum of recursive search
 LEVEL = 5
 
@@ -265,7 +271,8 @@ class Finder:
         raise NotImplementedError
 
     def uri2tree(self, uri: str) -> Tree | None:
-        r"""Convert URI to tree. Used by ``prepare()``.
+        r"""Convert ``uri`` to ``Tree``. Used by ``prepare()``,
+        ``move_cursor()``.
 
         :param uri:
         :type uri: str
@@ -278,25 +285,24 @@ class Finder:
             code = f.read()
         return self.parse(code)
 
-    def uni2tree(self, uni: UNI) -> Tree | None:
-        r"""Convert UNI to tree. Used by ``move_cursor()`` to parse
+    def uni2uri(self, uni: UNI) -> str:
+        r"""Convert UNI to node's URI. Used by ``move_cursor()`` to parse
         recursively. Override it if necessary.
 
         :param uni:
         :type uni: UNI
-        :rtype: Tree | None
+        :rtype: str
         """
-        path = uni.get_path()
-        if not os.path.exists(path):
-            return None
-        with open(path, "rb") as f:
-            code = f.read()
-        return self.parse(code)
+        return uni.get_uri()
 
     def move_cursor(
         self, uri: str, cursor: TreeCursor, is_all: bool = False
     ) -> str | None:
-        r"""Move cursor.
+        r"""Move cursor to next ``UNI``'s ``node`` which can make
+        ``self.__call__()`` return ``True``. Then return ``UNI``'s ``uri``. If
+        ``self.is_include_node()`` always be ``False``, returned inputted
+        ``uri``. If no any ``UNI``'s ``node`` which can make ``self.__call__()
+        `` return ``True``, return ``None``.
 
         :param self:
         :param uri:
@@ -310,16 +316,22 @@ class Finder:
         while self(UNI(uri, cursor.node)) is False:
             if self.is_include_node(cursor.node) and self.level < LEVEL:
                 self.level += 1
+                # push current uri
                 old_uri = uri
                 uni = UNI(uri, cursor.node)
-                tree = self.uni2tree(uni)
+                # update new uri
+                uri = self.uni2uri(uni)
+                tree = self.uri2tree(uri)
+                # skip if cannot convert ``uni``'s ``include_node`` to a tree.
                 if tree is not None:
                     if is_all:
+                        # don't ``self.reset()`` to use ``self.unis`` again.
                         self.find_all(uri, tree, False)
                     else:
                         result = self.find(uri, tree)
                         if result is not None:
-                            return
+                            return uri
+                # pop current uri
                 uri = old_uri
                 self.level -= 1
             if cursor.node.child_count > 0:
@@ -379,8 +391,6 @@ class Finder:
         _uri = self.move_cursor(uri, cursor, False)
         if _uri is not None:
             return UNI(_uri, cursor.node)
-        else:
-            return None
 
     def find_all(
         self, uri: str, tree: Tree | None = None, reset: bool = True
