@@ -3,7 +3,7 @@ r"""Test utils."""
 import os
 from typing import Literal
 
-from tree_sitter_lsp.utils import get_paths
+from lsp_tree_sitter.utils import get_paths
 
 FILETYPE = Literal["python", "c"]
 

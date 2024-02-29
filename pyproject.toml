@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 # https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [project]
-name = "tree-sitter-lsp"
+name = "lsp-tree-sitter"
 description = "a library to create language servers"
 readme = "README.md"
 # type_a | type_b
@@ -37,13 +37,13 @@ email = "wuzhenyu@ustc.edu"
 text = "GPL v3"
 
 [project.urls]
-Homepage = "https://tree-sitter-lsp.readthedocs.io"
-Download = "https://github.com/neomutt/tree-sitter-lsp/releases"
-"Bug Report" = "https://github.com/neomutt/tree-sitter-lsp/issues"
-Source = "https://github.com/neomutt/tree-sitter-lsp"
+Homepage = "https://lsp-tree-sitter.readthedocs.io"
+Download = "https://github.com/neomutt/lsp-tree-sitter/releases"
+"Bug Report" = "https://github.com/neomutt/lsp-tree-sitter/issues"
+Source = "https://github.com/neomutt/lsp-tree-sitter"
 
 [tool.setuptools.package-data]
-tree_sitter_lsp = ["py.typed", "assets/**"]
+lsp_tree_sitter = ["py.typed", "assets/**"]
 
 [tool.setuptools.dynamic.dependencies]
 file = "requirements.txt"
@@ -66,10 +66,10 @@ file = "requirements/yaml.txt"
 # end: scripts/update-pyproject.toml.pl
 
 [tool.setuptools_scm]
-write_to = "src/tree_sitter_lsp/_version.py"
+write_to = "src/lsp_tree_sitter/_version.py"
 
 [tool.setuptools-generate]
-write-to = "src/tree_sitter_lsp/_metainfo.py"
+write-to = "src/lsp_tree_sitter/_metainfo.py"
 
 [tool.mdformat]
 number = true

@@ -1,41 +1,41 @@
-# tree-sitter-lsp
+# lsp-tree-sitter
 
-[![readthedocs](https://shields.io/readthedocs/tree-sitter-lsp)](https://tree-sitter-lsp.readthedocs.io)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/neomutt/tree-sitter-lsp/main.svg)](https://results.pre-commit.ci/latest/github/neomutt/tree-sitter-lsp/main)
-[![github/workflow](https://github.com/neomutt/tree-sitter-lsp/actions/workflows/main.yml/badge.svg)](https://github.com/neomutt/tree-sitter-lsp/actions)
-[![codecov](https://codecov.io/gh/neomutt/tree-sitter-lsp/branch/main/graph/badge.svg)](https://codecov.io/gh/neomutt/tree-sitter-lsp)
-[![DeepSource](https://deepsource.io/gh/neomutt/tree-sitter-lsp.svg/?show_trend=true)](https://deepsource.io/gh/neomutt/tree-sitter-lsp)
+[![readthedocs](https://shields.io/readthedocs/lsp-tree-sitter)](https://lsp-tree-sitter.readthedocs.io)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/neomutt/lsp-tree-sitter/main.svg)](https://results.pre-commit.ci/latest/github/neomutt/lsp-tree-sitter/main)
+[![github/workflow](https://github.com/neomutt/lsp-tree-sitter/actions/workflows/main.yml/badge.svg)](https://github.com/neomutt/lsp-tree-sitter/actions)
+[![codecov](https://codecov.io/gh/neomutt/lsp-tree-sitter/branch/main/graph/badge.svg)](https://codecov.io/gh/neomutt/lsp-tree-sitter)
+[![DeepSource](https://deepsource.io/gh/neomutt/lsp-tree-sitter.svg/?show_trend=true)](https://deepsource.io/gh/neomutt/lsp-tree-sitter)
 
-[![github/downloads](https://shields.io/github/downloads/neomutt/tree-sitter-lsp/total)](https://github.com/neomutt/tree-sitter-lsp/releases)
-[![github/downloads/latest](https://shields.io/github/downloads/neomutt/tree-sitter-lsp/latest/total)](https://github.com/neomutt/tree-sitter-lsp/releases/latest)
-[![github/issues](https://shields.io/github/issues/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/issues)
-[![github/issues-closed](https://shields.io/github/issues-closed/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/issues?q=is%3Aissue+is%3Aclosed)
-[![github/issues-pr](https://shields.io/github/issues-pr/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/pulls)
-[![github/issues-pr-closed](https://shields.io/github/issues-pr-closed/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/pulls?q=is%3Apr+is%3Aclosed)
-[![github/discussions](https://shields.io/github/discussions/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/discussions)
-[![github/milestones](https://shields.io/github/milestones/all/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/milestones)
-[![github/forks](https://shields.io/github/forks/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/network/members)
-[![github/stars](https://shields.io/github/stars/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/stargazers)
-[![github/watchers](https://shields.io/github/watchers/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/watchers)
-[![github/contributors](https://shields.io/github/contributors/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/graphs/contributors)
-[![github/commit-activity](https://shields.io/github/commit-activity/w/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/graphs/commit-activity)
-[![github/last-commit](https://shields.io/github/last-commit/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/commits)
-[![github/release-date](https://shields.io/github/release-date/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/releases/latest)
+[![github/downloads](https://shields.io/github/downloads/neomutt/lsp-tree-sitter/total)](https://github.com/neomutt/lsp-tree-sitter/releases)
+[![github/downloads/latest](https://shields.io/github/downloads/neomutt/lsp-tree-sitter/latest/total)](https://github.com/neomutt/lsp-tree-sitter/releases/latest)
+[![github/issues](https://shields.io/github/issues/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/issues)
+[![github/issues-closed](https://shields.io/github/issues-closed/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/issues?q=is%3Aissue+is%3Aclosed)
+[![github/issues-pr](https://shields.io/github/issues-pr/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/pulls)
+[![github/issues-pr-closed](https://shields.io/github/issues-pr-closed/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/pulls?q=is%3Apr+is%3Aclosed)
+[![github/discussions](https://shields.io/github/discussions/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/discussions)
+[![github/milestones](https://shields.io/github/milestones/all/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/milestones)
+[![github/forks](https://shields.io/github/forks/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/network/members)
+[![github/stars](https://shields.io/github/stars/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/stargazers)
+[![github/watchers](https://shields.io/github/watchers/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/watchers)
+[![github/contributors](https://shields.io/github/contributors/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/graphs/contributors)
+[![github/commit-activity](https://shields.io/github/commit-activity/w/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/graphs/commit-activity)
+[![github/last-commit](https://shields.io/github/last-commit/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/commits)
+[![github/release-date](https://shields.io/github/release-date/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/releases/latest)
 
-[![github/license](https://shields.io/github/license/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp/blob/main/LICENSE)
-[![github/languages](https://shields.io/github/languages/count/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp)
-[![github/languages/top](https://shields.io/github/languages/top/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp)
-[![github/directory-file-count](https://shields.io/github/directory-file-count/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp)
-[![github/code-size](https://shields.io/github/languages/code-size/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp)
-[![github/repo-size](https://shields.io/github/repo-size/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp)
-[![github/v](https://shields.io/github/v/release/neomutt/tree-sitter-lsp)](https://github.com/neomutt/tree-sitter-lsp)
+[![github/license](https://shields.io/github/license/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter/blob/main/LICENSE)
+[![github/languages](https://shields.io/github/languages/count/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter)
+[![github/languages/top](https://shields.io/github/languages/top/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter)
+[![github/directory-file-count](https://shields.io/github/directory-file-count/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter)
+[![github/code-size](https://shields.io/github/languages/code-size/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter)
+[![github/repo-size](https://shields.io/github/repo-size/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter)
+[![github/v](https://shields.io/github/v/release/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter)
 
-[![pypi/status](https://shields.io/pypi/status/tree-sitter-lsp)](https://pypi.org/project/tree-sitter-lsp/#description)
-[![pypi/v](https://shields.io/pypi/v/tree-sitter-lsp)](https://pypi.org/project/tree-sitter-lsp/#history)
-[![pypi/downloads](https://shields.io/pypi/dd/tree-sitter-lsp)](https://pypi.org/project/tree-sitter-lsp/#files)
-[![pypi/format](https://shields.io/pypi/format/tree-sitter-lsp)](https://pypi.org/project/tree-sitter-lsp/#files)
-[![pypi/implementation](https://shields.io/pypi/implementation/tree-sitter-lsp)](https://pypi.org/project/tree-sitter-lsp/#files)
-[![pypi/pyversions](https://shields.io/pypi/pyversions/tree-sitter-lsp)](https://pypi.org/project/tree-sitter-lsp/#files)
+[![pypi/status](https://shields.io/pypi/status/lsp-tree-sitter)](https://pypi.org/project/lsp-tree-sitter/#description)
+[![pypi/v](https://shields.io/pypi/v/lsp-tree-sitter)](https://pypi.org/project/lsp-tree-sitter/#history)
+[![pypi/downloads](https://shields.io/pypi/dd/lsp-tree-sitter)](https://pypi.org/project/lsp-tree-sitter/#files)
+[![pypi/format](https://shields.io/pypi/format/lsp-tree-sitter)](https://pypi.org/project/lsp-tree-sitter/#files)
+[![pypi/implementation](https://shields.io/pypi/implementation/lsp-tree-sitter)](https://pypi.org/project/lsp-tree-sitter/#files)
+[![pypi/pyversions](https://shields.io/pypi/pyversions/lsp-tree-sitter)](https://pypi.org/project/lsp-tree-sitter/#files)
 
 A core library to support language servers.
 
@@ -122,7 +122,7 @@ PKGBUILD:5:7-5:17:error: 'wrong_arch' is not one of ['any', 'pentium4', 'i486', 
 
 <!-- markdownlint-enable MD013 -->
 
-![PKGBUILD](https://github.com/neomutt/tree-sitter-lsp/assets/32936898/58614996-bd8a-4e27-b573-87346c82ea2a)
+![PKGBUILD](https://github.com/neomutt/lsp-tree-sitter/assets/32936898/58614996-bd8a-4e27-b573-87346c82ea2a)
 
 Sometimes it will be more complicated:
 
@@ -153,7 +153,7 @@ $ mutt-language-server --check neomuttrc
 neomuttrc:1:33-1:35:error: 'no' is not of type 'number'
 ```
 
-![neomuttrc](https://github.com/neomutt/tree-sitter-lsp/assets/32936898/75ebf0c1-784a-43db-ae11-59783af57b4f)
+![neomuttrc](https://github.com/neomutt/lsp-tree-sitter/assets/32936898/75ebf0c1-784a-43db-ae11-59783af57b4f)
 
 We put the result to the json's `.set` not `.` just in order to reserve the
 other keys for other usages.
@@ -203,7 +203,7 @@ mutt-language-server --generate-schema neomuttrc
 
 <!-- markdownlint-enable MD013 -->
 
-![hover](https://github.com/neomutt/tree-sitter-lsp/assets/32936898/22a0347e-3d4f-45c5-833b-e89225ce3b74)
+![hover](https://github.com/neomutt/lsp-tree-sitter/assets/32936898/22a0347e-3d4f-45c5-833b-e89225ce3b74)
 
 ## References
 
