@@ -95,7 +95,7 @@ jobs:
       - uses: Freed-Wu/update-aur-package@v1.0.11
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          package_name: python-tree-sitter-lsp
+          package_name: python-lsp-tree-sitter
           ssh_private_key: ${{secrets.AUR_SSH_PRIVATE_KEY}}
 
   deploy-nur:

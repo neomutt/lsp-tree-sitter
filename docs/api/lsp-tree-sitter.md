@@ -1,4 +1,4 @@
-# tree-sitter-lsp
+# lsp-tree-sitter
 
 ```{autofile} ../../src/*/*.py
 ---

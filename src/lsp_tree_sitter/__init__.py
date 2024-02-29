@@ -1,4 +1,4 @@
-r"""Tree-sitter LSP
+r"""LSP Tree-sitter
 ===================
 """
 
