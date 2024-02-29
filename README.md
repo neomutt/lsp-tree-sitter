@@ -57,7 +57,7 @@ I've had enough of writing many DSLs in my editor without any LSP support
   for [(neo)mutt](https://github.com/neomutt/neomutt)'s (neo)muttrc
 - [More](https://github.com/Freed-Wu?tab=repositories&q=lsp-server)
 
-## What does this library provide
+## Usage
 
 ### Schema
 
