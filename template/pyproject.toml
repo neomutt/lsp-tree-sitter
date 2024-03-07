@@ -1,0 +1,115 @@
+[build-system]
+requires = ["setuptools_scm[toml] >= 6.2", "setuptools-generate >= 0.0.6"]
+build-backend = "setuptools.build_meta"
+
+# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
+[project]
+name = "{{ project }}"
+description = "language server for {{ language }}"
+readme = "README.md"
+# type_a | type_b
+requires-python = ">= 3.10"
+keywords = ["{{ language }}", "language server"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Build Tools",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX",
+  "Operating System :: Unix",
+  "Operating System :: MacOS",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dynamic = ["version", "dependencies", "optional-dependencies"]
+
+[[project.authors]]
+name = "Wu Zhenyu"
+email = "wuzhenyu@ustc.edu"
+
+[project.license]
+text = "GPL v3"
+
+[project.urls]
+Homepage = "https://{{ project }}.readthedocs.io"
+Download = "https://github.com/{{ user }}/{{ project }}/releases"
+"Bug Report" = "https://github.com/{{ user }}/{{ project }}/issues"
+Source = "https://github.com/{{ user }}/{{ project }}"
+
+[project.scripts]
+{{ project }} = "{{ module }}.__main__:main"
+
+[tool.setuptools.package-data]
+{{ module }} = ["py.typed", "assets/**"]
+
+[tool.setuptools.data-files]
+"share/man/man1" = ["sdist/{{ project }}.1"]
+"share/bash-completion/completions" = ["sdist/{{ project }}"]
+"share/zsh/site-functions" = ["sdist/_{{ project }}"]
+
+[tool.setuptools.dynamic.dependencies]
+file = "requirements.txt"
+
+# begin: scripts/update-pyproject.toml.pl
+[tool.setuptools.dynamic.optional-dependencies.colorize]
+file = "requirements/colorize.txt"
+
+[tool.setuptools.dynamic.optional-dependencies.dev]
+file = "requirements/dev.txt"
+
+[tool.setuptools.dynamic.optional-dependencies.misc]
+file = "requirements/misc.txt"
+# end: scripts/update-pyproject.toml.pl
+
+[tool.setuptools_scm]
+write_to = "src/{{ module }}/_version.py"
+
+[tool.setuptools-generate]
+write-to = "src/{{ module }}/_metainfo.py"
+
+[tool.setuptools-generate.metainfo-template]
+file = "templates/metainfo.py.j2"
+
+[tool.mdformat]
+number = true
+
+[tool.doq]
+template_path = "templates"
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.lint]
+select = [
+  # pycodestyle
+  "E",
+  # pyflakes
+  "F",
+  # pyupgrade
+  "UP",
+  # flake8-bugbear
+  "B",
+  # flake8-simplify
+  "SIM",
+  # isort
+  "I",
+]
+ignore = ["D205", "D400"]
+preview = true
+
+[tool.ruff.format]
+docstring-code-format = true
+preview = true
+
+[tool.coverage.report]
+exclude_lines = [
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+  "\\s*import tomli as tomllib",
+]

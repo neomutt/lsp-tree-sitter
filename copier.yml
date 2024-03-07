@@ -1,0 +1,37 @@
+---
+_templates_suffix: ""
+_answers_file: .copier-answers.yml
+_subdirectory: template
+
+language:
+  type: str
+  help: What is your language name?
+
+patterns:
+  type: str
+  help: What is your file patterns? split by " "
+  default: "*.{{ language }}"
+
+project:
+  type: str
+  help: What is your project name?
+  default: "{{ language }}-language-server"
+
+module:
+  type: str
+  help: What is your Python module name?
+  default: "{{ project | replace('-', '_') }}"
+
+class:
+  type: str
+  help: What is your Python class name?
+  default: "{{ module | replace('_', ' ') | title | replace(' ', '') }}"
+
+parser:
+  type: str
+  help: What is your tree-sitter parser name?
+  default: "tree-sitter-{{ language }}"
+
+user:
+  type: str
+  help: What is your user name?

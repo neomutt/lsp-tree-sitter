@@ -1,0 +1,109 @@
+---
+"on":
+  push:
+    paths-ignore:
+      - "**.md"
+      - docs/*
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - docs/*
+  workflow_dispatch:
+
+# https://github.com/softprops/action-gh-release/issues/236
+permissions:
+  contents: write
+
+env:
+  PYTHONUTF8: "1"
+  python-version: 3.x
+  cache: pip
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    runs-on: $\{\{matrix.runs-on\}\}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: $\{\{env.python-version\}\}
+          cache: $\{\{env.cache\}\}
+          cache-dependency-path: |-
+            requirements.txt
+            requirements/dev.txt
+      - name: Install dependencies
+        run: |
+          pip install -e '.[dev]'
+      - name: Test
+        run: |
+          pytest --cov
+      - uses: codecov/codecov-action@v3
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    runs-on: $\{\{matrix.runs-on\}\}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: $\{\{env.python-version\}\}
+          cache: $\{\{env.cache\}\}
+          cache-dependency-path: |-
+            requirements.txt
+            requirements/dev.txt
+      - name: Install dependencies
+        run: |
+          pip install build
+      - name: Build
+        run: |
+          pyproject-build
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        if: runner.os == 'Linux' && startsWith(github.ref, 'refs/tags/')
+        with:
+          password: $\{\{secrets.PYPI_API_TOKEN\}\}
+      - uses: actions/upload-artifact@v3
+        if: runner.os == 'Linux' && ! startsWith(github.ref, 'refs/tags/')
+        with:
+          path: |
+            dist/*
+      - uses: softprops/action-gh-release@v1
+        if: runner.os == 'Linux' && startsWith(github.ref, 'refs/tags/')
+        with:
+          # body_path: build/CHANGELOG.md
+          files: |
+            dist/*
+
+  deploy-aur:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: {{ user }}/update-aur-package@v1.0.11
+        with:
+          package_name: {{ project }}
+          ssh_private_key: $\{\{secrets.AUR_SSH_PRIVATE_KEY\}\}
+
+  deploy-nur:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Trigger Workflow
+        run: >
+          curl -X POST -d '{"ref": "main"}'
+          -H "Accept: application/vnd.github.v3+json"
+          -H "Authorization: Bearer $\{\{secrets.GH_TOKEN\}\}"
+          https://api.github.com/repos/{{ user }}/nur-packages/actions/workflows/version.yml/dispatches
