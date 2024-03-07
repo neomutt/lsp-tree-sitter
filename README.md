@@ -226,7 +226,7 @@ supports the language where you want to create a language server.
 ### Copy a template
 
 ```sh
-$ copier copy gh:neomutt/lsp-tree-sitter /path/to/your/XXX-language-server
+$ copier copy -rHEAD gh:neomutt/lsp-tree-sitter /path/to/your/XXX-language-server
 🎤 What is your language name?
 zathurarc
 🎤 What is your file patterns? split by " "
