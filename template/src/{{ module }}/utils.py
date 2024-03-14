@@ -6,7 +6,7 @@ import json
 import os
 from typing import Any
 
-from tree_sitter.binding import Query
+from tree_sitter import Query
 
 from . import FILETYPE
 

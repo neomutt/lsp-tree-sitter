@@ -18,8 +18,7 @@ from lsprotocol.types import (
     Range,
     TextEdit,
 )
-from tree_sitter import Node, Tree
-from tree_sitter.binding import Query
+from tree_sitter import Node, Query, Tree
 
 from . import UNI, Finder
 from .schema import Trie
