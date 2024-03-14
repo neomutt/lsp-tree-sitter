@@ -35,3 +35,7 @@ parser:
 user:
   type: str
   help: What is your user name?
+
+email:
+  type: str
+  help: What is your email?

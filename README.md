@@ -241,6 +241,8 @@ ZathuraLanguageServer
 tree-sitter-zathurarc
 🎤 What is your user name?
 wzy
+🎤 What is your email?
+32936898+Freed-Wu@users.noreply.github.com
 
 Copying from template version None
 create  .
