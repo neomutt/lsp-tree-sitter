@@ -76,10 +76,10 @@ def main() -> None:
     if args.generate_schema or args.check or args.convert:
         from lsp_tree_sitter.diagnose import check
         from lsp_tree_sitter.utils import pprint
-        from tree_sitter_{{ language }} import parser
 
         from .finders import DIAGNOSTICS_FINDER_CLASSES
         from .schema import {{ language | title }}Trie
+        from .utils import parser
 
         if args.generate_schema:
             from .misc import get_schema

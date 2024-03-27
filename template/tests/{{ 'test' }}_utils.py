@@ -2,9 +2,8 @@ r"""Test utils."""
 
 import os
 
-from tree_sitter_{{ language }} import parser
 from {{ module }}.finders import Import{{ language | title }}Finder
-from {{ module }}.utils import get_schema
+from {{ module }}.utils import get_schema, parser
 
 
 class Test:

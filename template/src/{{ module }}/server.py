@@ -32,10 +32,9 @@ from lsprotocol.types import (
     TextEdit,
 )
 from pygls.server import LanguageServer
-from tree_sitter_{{ language }} import parser
 
 from .finders import DIAGNOSTICS_FINDER_CLASSES, FORMAT_FINDER_CLASSES, Import{{ language | title }}Finder
-from .utils import get_schema
+from .utils import get_schema, parser
 
 
 class {{ class }}(LanguageServer):
