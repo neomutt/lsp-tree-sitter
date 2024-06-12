@@ -13,7 +13,7 @@ from . import FILETYPE
 
 SCHEMAS = {}
 QUERIES = {}
-language = Language(get_language_ptr(), "{{ language }}")
+language = Language(get_language_ptr())
 parser = Parser()
 parser.set_language(language)
 
