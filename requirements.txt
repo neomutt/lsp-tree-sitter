@@ -2,6 +2,6 @@
 
 colorama
 jinja2
-jsonschema
+jsonschema >= 4.0.0
 pygls
-tree-sitter
+tree-sitter >= 0.22.0

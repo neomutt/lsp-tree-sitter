@@ -79,12 +79,12 @@ repos:
     hooks:
       - id: update-pyproject.toml
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.8
+    rev: v0.4.9
     hooks:
       - id: ruff
       - id: ruff-format
   - repo: https://github.com/kumaraditya303/mirrors-pyright
-    rev: v1.1.366
+    rev: v1.1.367
     hooks:
       - id: pyright
 
