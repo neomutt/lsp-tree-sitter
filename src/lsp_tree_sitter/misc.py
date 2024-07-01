@@ -3,7 +3,7 @@ r"""Misc
 """
 
 from gzip import decompress
-from itertools import chain
+from pathlib import Path
 from subprocess import check_output  # nosec: B404
 from typing import Literal
 from urllib import request
@@ -11,9 +11,17 @@ from urllib import request
 from bs4 import BeautifulSoup, FeatureNotFound
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
-from platformdirs import site_data_path, user_data_path
+from platformdirs import site_data_dir, user_data_dir
 from pygls.uris import uri_scheme
 from pypandoc import convert_text
+
+
+def get_data_paths(appname: str) -> list[Path]:
+    return [
+        Path(d)
+        for d in site_data_dir(appname, multipath=True).split(":")
+        + [user_data_dir(appname)]
+    ]
 
 
 def get_man(filename: str) -> str:
@@ -30,20 +38,18 @@ def get_man(filename: str) -> str:
         number = int(filename.split(".")[-1])
     filename += "*"
     text = b""
-    path = ""
-    for path in chain(
-        (user_data_path("man") / f"man{number}").glob(filename),
-        (site_data_path("man") / f"man{number}").glob(filename),
-    ):
-        try:
-            with open(path, "rb") as f:
-                text = f.read()
-            break
-        except Exception:  # nosec: B112
-            continue
+    file = ""
+    for path in get_data_paths("man"):
+        for file in (path / f"man{number}").glob(filename):
+            try:
+                with open(file, "rb") as f:
+                    text = f.read()
+                break
+            except Exception:  # nosec: B112
+                continue
     if text == b"":
         raise FileNotFoundError
-    _, _, ext = str(path).rpartition(".")
+    _, _, ext = str(file).rpartition(".")
     if ext != str(number):
         text = decompress(text)
     return text.decode()
@@ -58,20 +64,18 @@ def get_info(filename: str) -> str:
     """
     filename += "*"
     text = b""
-    path = ""
-    for path in chain(
-        user_data_path("info").glob(filename),
-        site_data_path("info").glob(filename),
-    ):
-        try:
-            with open(path, "rb") as f:
-                text = f.read()
-            break
-        except Exception:  # nosec: B112
-            continue
+    file = ""
+    for path in get_data_paths("info"):
+        for file in path.glob(filename):
+            try:
+                with open(file, "rb") as f:
+                    text = f.read()
+                break
+            except Exception:  # nosec: B112
+                continue
     if text == b"":
         raise FileNotFoundError
-    _, _, ext = str(path).rpartition(".")
+    _, _, ext = str(file).rpartition(".")
     if not ext.startswith("info"):
         text = decompress(text)
     return text.decode()
