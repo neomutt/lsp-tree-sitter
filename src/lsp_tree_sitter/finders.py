@@ -615,8 +615,10 @@ class QueryFinder(Finder):
                 unis += [uni]
         return unis
 
-    def capture2uni(self, name: str, nodes: list[Node], uri: str) -> UNI:
-        r"""Capture2uni.
+    def capture2uni(
+        self, name: str, nodes: list[Node], uri: str
+    ) -> UNI | None:
+        r"""Capture2uni. can return ``None`` to skip.
 
         :param name:
         :type name: str
@@ -624,6 +626,6 @@ class QueryFinder(Finder):
         :type nodes: list[Node]
         :param uri:
         :type uri: str
-        :rtype: UNI
+        :rtype: UNI | None
         """
         return UNI(uri, nodes[0])
