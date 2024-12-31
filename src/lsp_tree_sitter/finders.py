@@ -610,18 +610,18 @@ class QueryFinder(Finder):
         :rtype: list[UNI]
         """
         unis = []
-        for name, nodes in captures.items():
-            if uni := self.capture2uni(name, nodes, uri):
+        for label, nodes in captures.items():
+            if uni := self.capture2uni(label, nodes, uri):
                 unis += [uni]
         return unis
 
     def capture2uni(
-        self, name: str, nodes: list[Node], uri: str
+        self, label: str, nodes: list[Node], uri: str
     ) -> UNI | None:
         r"""Capture2uni. can return ``None`` to skip.
 
-        :param name:
-        :type name: str
+        :param label:
+        :type label: str
         :param nodes:
         :type nodes: list[Node]
         :param uri:
