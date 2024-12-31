@@ -212,7 +212,9 @@ class UnsortedFinder(RepeatedFinder):
         :type _uni: UNI
         :rtype: bool
         """
-        return uni.node.text < _uni.node.text
+        if uni.node.text and _uni.node.text:
+            return uni.node.text < _uni.node.text
+        return True
 
 
 @dataclass(init=False)
@@ -597,29 +599,31 @@ class QueryFinder(Finder):
         return self.captures2unis(captures, uri)
 
     def captures2unis(
-        self, captures: list[tuple[Node, str]], uri: str
+        self, captures: dict[str, list[Node]], uri: str
     ) -> list[UNI]:
         r"""Captures2unis.
 
         :param captures:
-        :type captures: list[tuple[Node, str]]
+        :type captures: dict[str, list[Node]]
         :param uri:
         :type uri: str
         :rtype: list[UNI]
         """
         unis = []
-        for capture in captures:
-            if uni := self.capture2uni(capture, uri):
+        for name, nodes in captures.items():
+            if uni := self.capture2uni(name, nodes, uri):
                 unis += [uni]
         return unis
 
-    def capture2uni(self, capture: tuple[Node, str], uri: str) -> UNI | None:
+    def capture2uni(self, name: str, nodes: list[Node], uri: str) -> UNI:
         r"""Capture2uni.
 
-        :param capture:
-        :type capture: tuple[Node, str]
+        :param name:
+        :type name: str
+        :param nodes:
+        :type nodes: list[Node]
         :param uri:
         :type uri: str
-        :rtype: UNI | None
+        :rtype: UNI
         """
-        return UNI(uri, capture[0])
+        return UNI(uri, nodes[0])
