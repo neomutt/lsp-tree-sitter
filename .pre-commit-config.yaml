@@ -3,7 +3,7 @@ exclude: ^template(s)?/
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: fix-byte-order-marker
@@ -27,7 +27,7 @@ repos:
     hooks:
       - id: remove-crlf
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.1
     hooks:
       - id: codespell
         additional_dependencies:
@@ -39,7 +39,7 @@ repos:
         args:
           - --msg-filename
   - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
-    rev: 3.0.3
+    rev: 3.4.0
     hooks:
       - id: editorconfig-checker
   - repo: https://github.com/jumanjihouse/pre-commit-hooks
@@ -47,15 +47,15 @@ repos:
     hooks:
       - id: check-mailmap
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.5
+    rev: v1.7.7
     hooks:
       - id: actionlint
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
+    rev: v1.37.1
     hooks:
       - id: yamllint
   - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.21
+    rev: 0.7.22
     hooks:
       - id: mdformat
         additional_dependencies:
@@ -64,27 +64,23 @@ repos:
           - mdformat-myst
           - mdformat-toc
           - mdformat-deflist
-          - mdformat-beautysh
+          # - mdformat-beautysh
           - mdformat-ruff
           - mdformat-config
           - mdformat-web
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.17.0
+    rev: v0.18.1
     hooks:
       - id: markdownlint-cli2
         additional_dependencies:
           - markdown-it-texmath
-  - repo: https://github.com/Freed-Wu/pre-commit-hooks
-    rev: 0.0.11
-    hooks:
-      - id: update-pyproject.toml
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    rev: v0.12.9
     hooks:
       - id: ruff
       - id: ruff-format
   - repo: https://github.com/kumaraditya303/mirrors-pyright
-    rev: v1.1.391
+    rev: v1.1.403
     hooks:
       - id: pyright
 

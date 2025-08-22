@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from jinja2 import Template
-from jsonschema import Validator
+from jsonschema.protocols import Validator
 from jsonschema.validators import validator_for
 from lsprotocol.types import (
     Diagnostic,
@@ -18,7 +18,7 @@ from lsprotocol.types import (
     Range,
     TextEdit,
 )
-from tree_sitter import Node, Query, Tree
+from tree_sitter import Node, Query, QueryCursor, Tree
 
 from . import UNI, Finder
 from .schema import Trie
@@ -578,7 +578,7 @@ class QueryFinder(Finder):
         :type severity: DiagnosticSeverity
         :rtype: None
         """
-        self.query = query
+        self.cursor = QueryCursor(query)
         super().__init__(message, severity)
 
     def find_all(
@@ -595,7 +595,7 @@ class QueryFinder(Finder):
         :rtype: list[UNI]
         """
         tree = self.prepare(uri, tree, reset)
-        captures = self.query.captures(tree.root_node)
+        captures = self.cursor.captures(tree.root_node)
         return self.captures2unis(captures, uri)
 
     def captures2unis(

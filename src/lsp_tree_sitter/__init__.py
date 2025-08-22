@@ -6,6 +6,7 @@ import os
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlparse
 
 from jinja2 import Template
 from lsprotocol.types import (
@@ -44,7 +45,11 @@ class UNI:
     node: Node
 
     def __post_init__(self):
-        self.path = to_fs_path(self.uri)
+        if urlparse(self.uri).scheme == "":
+            self.path = self.uri
+            self.uri = from_fs_path(self.path)
+        else:
+            self.path = to_fs_path(self.uri)
 
     def __str__(self) -> str:
         r"""Str.
