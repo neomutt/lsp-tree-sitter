@@ -1,4 +1,5 @@
 #!/usr/bin/env -S pip install -r
 
 lsp-tree-sitter
+pygls >= 2.0.0
 tree-sitter-{{ language }}

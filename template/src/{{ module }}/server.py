@@ -31,7 +31,7 @@ from lsprotocol.types import (
     TextDocumentPositionParams,
     TextEdit,
 )
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
 from .finders import DIAGNOSTICS_FINDER_CLASSES, FORMAT_FINDER_CLASSES, Import{{ language | title }}Finder
 from .utils import get_schema, parser
