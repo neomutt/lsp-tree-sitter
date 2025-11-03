@@ -28,6 +28,7 @@ from lsprotocol.types import (
     Hover,
     MarkupContent,
     MarkupKind,
+    PublishDiagnosticsParams,
     TextDocumentPositionParams,
     TextEdit,
 )
@@ -59,7 +60,9 @@ class {{ class }}(LanguageServer):
             :type params: DidChangeTextDocumentParams
             :rtype: None
             """
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             self.trees[document.uri] = parser.parse(document.source.encode())
             diagnostics = get_diagnostics(
                 document.uri,
@@ -67,7 +70,12 @@ class {{ class }}(LanguageServer):
                 DIAGNOSTICS_FINDER_CLASSES,
                 "{{ language }}",
             )
-            self.publish_diagnostics(params.text_document.uri, diagnostics)
+            self.text_document_publish_diagnostics(
+                PublishDiagnosticsParams(
+                    uri=params.text_document.uri,
+                    diagnostics=diagnostics,
+                )
+            )
 
         @self.feature(TEXT_DOCUMENT_FORMATTING)
         def format(params: DocumentFormattingParams) -> list[TextEdit]:
@@ -80,7 +88,9 @@ class {{ class }}(LanguageServer):
             filetype = get_filetype(params.text_document.uri)
             if filetype == "":
                 return []
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             return get_text_edits(
                 document.uri,
                 self.trees[document.uri],
@@ -96,7 +106,9 @@ class {{ class }}(LanguageServer):
             :type params: DocumentLinkParams
             :rtype: list[DocumentLink]
             """
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             return Import{{ language | title }}Finder().get_document_links(
                 document.uri, self.trees[document.uri]
             )
@@ -109,7 +121,9 @@ class {{ class }}(LanguageServer):
             :type params: TextDocumentPositionParams
             :rtype: Hover | None
             """
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             uni = PositionFinder(params.position, right_equal=True).find(
                 document.uri, self.trees[document.uri]
             )
@@ -138,7 +152,9 @@ class {{ class }}(LanguageServer):
             :type params: CompletionParams
             :rtype: CompletionList
             """
-            document = self.workspace.get_document(params.text_document.uri)
+            document = self.workspace.get_text_document(
+                params.text_document.uri
+            )
             uni = PositionFinder(params.position, right_equal=True).find(
                 document.uri, self.trees[document.uri]
             )
