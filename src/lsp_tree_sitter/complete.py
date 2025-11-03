@@ -14,8 +14,7 @@ from lsprotocol.types import (
     MarkupContent,
     MarkupKind,
 )
-
-from . import UNI
+from pygls.uris import to_fs_path
 
 
 def get_completion_list_by_enum(
@@ -71,7 +70,10 @@ def get_completion_list_by_uri(
     """
     if exprs is None:
         exprs = {"*": "text", "**/*": "text"}
-    dirname = os.path.dirname(UNI.uri2path(uri))
+    p = to_fs_path(uri)
+    if p is None:
+        raise TypeError
+    dirname = os.path.dirname(p)
     prefix = os.path.join(dirname, text)
     items = []
     for expr, filetype in exprs.items():

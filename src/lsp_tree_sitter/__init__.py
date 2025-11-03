@@ -1,12 +1,10 @@
-r"""LSP Tree-sitter
+r"""LSP Tree sitter
 ===================
 """
 
 import os
-from copy import deepcopy
-from dataclasses import dataclass
-from typing import Any
-from urllib.parse import urlparse
+from dataclasses import dataclass, field
+from typing import Any, Self
 
 from jinja2 import Template
 from lsprotocol.types import (
@@ -18,7 +16,7 @@ from lsprotocol.types import (
     Range,
     TextEdit,
 )
-from pygls.uris import from_fs_path, to_fs_path
+from pygls.uris import to_fs_path
 from tree_sitter import Node, Tree, TreeCursor
 
 try:
@@ -27,29 +25,16 @@ except ImportError:  # for setuptools-generate
     __version__ = "rolling"
     __version_tuple__ = (0, 0, 0, __version__, "")
 
-# maximum of recursive search
-LEVEL = 5
-
 
 @dataclass
 class UNI:
     r"""Unified node identifier.
 
     ``uri`` and ``path`` is document's uri and path.
-    ``get_uri()`` and ``get_path()`` is node's uri and path which are
-    calculated by ``uri`` and ``path``, can throw ``TypeError`` when ``uri`` is
-    wrong. ``path`` can be ``None`` for wrong ``uri``.
     """
 
     uri: str
     node: Node
-
-    def __post_init__(self):
-        if urlparse(self.uri).scheme == "":
-            self.path = self.uri
-            self.uri = from_fs_path(self.path)
-        else:
-            self.path = to_fs_path(self.uri)
 
     def __str__(self) -> str:
         r"""Str.
@@ -57,102 +42,57 @@ class UNI:
         :rtype: str
         """
         return (
-            f"{self.get_text()}@{self.uri}:"
+            f"{self.text}@{self.uri}:"
             f"{self.node.start_point[0] + 1}:{self.node.start_point[1] + 1}-"
             f"{self.node.end_point[0] + 1}:{self.node.end_point[1]}"
         )
 
-    def get_text(self) -> str:
-        r"""Get text.
+    @property
+    def text(self) -> str:
+        r"""Text.
 
         :rtype: str
         """
-        return self.node2text(self.node)
+        return self.node.text.decode() if self.node.text else ""
 
-    @staticmethod
-    def node2text(node: Node) -> str:
-        r"""Node2text.
+    @property
+    def filepath(self) -> str:
+        r"""Filepath.
 
-        :param node:
-        :type node: Node
+        :param self:
         :rtype: str
         """
-        return node.text.decode()
+        filepath = to_fs_path(self.uri)
+        if filepath is None:
+            raise TypeError
+        return filepath
 
-    def get_location(self) -> Location:
-        r"""Get location.
+    @property
+    def path(self) -> str:
+        r"""Path.
+
+        :rtype: str
+        """
+        text = os.path.expandvars(os.path.expanduser(self.text))
+        return os.path.join(os.path.dirname(self.filepath), text)
+
+    @property
+    def range(self) -> Range:
+        r"""Range.
+
+        :rtype: Range
+        """
+        return Range(
+            Position(*self.node.start_point), Position(*self.node.end_point)
+        )
+
+    @property
+    def location(self) -> Location:
+        r"""Location.
 
         :rtype: Location
         """
-        return Location(self.uri, self.get_range())
-
-    def get_range(self) -> Range:
-        r"""Get range.
-
-        :rtype: Range
-        """
-        return self.node2range(self.node)
-
-    @staticmethod
-    def node2range(node: Node) -> Range:
-        r"""Node2range.
-
-        :param node:
-        :type node: Node
-        :rtype: Range
-        """
-        return Range(Position(*node.start_point), Position(*node.end_point))
-
-    @staticmethod
-    def uri2path(uri: str) -> str:
-        r"""Uri2path.
-
-        :param uri:
-        :type uri: str
-        :rtype: str
-        """
-        if path := to_fs_path(uri):
-            return path
-        raise TypeError
-
-    @staticmethod
-    def path2uri(path: str) -> str:
-        r"""Path2uri.
-
-        :param path:
-        :type path: str
-        :rtype: str
-        """
-        if uri := from_fs_path(path):
-            return uri
-        raise TypeError
-
-    def get_path(self) -> str:
-        r"""Get path.
-
-        :rtype: str
-        """
-        if self.path is None:
-            raise TypeError
-        text = os.path.expandvars(os.path.expanduser(self.get_text()))
-        return self.join(self.path, text)
-
-    def get_uri(self) -> str:
-        r"""Get uri.
-
-        :rtype: str
-        """
-        return self.path2uri(self.get_path())
-
-    @staticmethod
-    def join(path, text) -> str:
-        r"""Join document's path and text to get node's path.
-
-        :param path:
-        :param text:
-        :rtype: str
-        """
-        return os.path.join(os.path.dirname(path), text)
+        return Location(self.uri, self.range)
 
     def get_diagnostic(
         self,
@@ -171,7 +111,7 @@ class UNI:
         :rtype: Diagnostic
         """
         return Diagnostic(
-            self.get_range(),
+            self.range,
             Template(message).render(uni=self, **kwargs),
             severity,
         )
@@ -183,20 +123,21 @@ class UNI:
         :type new_text: str
         :rtype: TextEdit
         """
-        return TextEdit(self.get_range(), new_text)
+        return TextEdit(self.range, new_text)
 
     def get_document_link(
-        self, target: str = "{{uni.get_uri()}}", **kwargs
+        self, target: str = "{{uni.get_uri()}}", **kwargs: Any
     ) -> DocumentLink:
         r"""Get document link.
 
         :param target:
         :type target: str
         :param kwargs:
+        :type kwargs: Any
         :rtype: DocumentLink
         """
         return DocumentLink(
-            self.get_range(),
+            self.range,
             Template(target).render(uni=self, **kwargs),
         )
 
@@ -207,13 +148,9 @@ class Finder:
 
     message: str = ""
     severity: DiagnosticSeverity = DiagnosticSeverity.Error
-
-    def __post_init__(self) -> None:
-        r"""Post init.
-
-        :rtype: None
-        """
-        self.reset()
+    max_level: int = 5
+    level: int = 0
+    unis: list[UNI] = field(default_factory=list)
 
     def __call__(self, uni: UNI) -> bool:
         r"""Call.
@@ -224,38 +161,63 @@ class Finder:
         """
         return True
 
-    def __and__(self, second: "Finder") -> "Finder":
+    def __and__(self, second: Self) -> "AndFinder":
         r"""And.
 
         :param second:
-        :type second: Finder
-        :rtype: "Finder"
+        :type second: Self
+        :rtype: AndFinder
         """
-        finder = deepcopy(self)
-        finder.__call__ = lambda uni: self(uni) and second(uni)
-        return finder
+        return AndFinder(finders=(self, second))
 
-    def __or__(self, second: "Finder") -> "Finder":
+    def __or__(self, second: Self) -> "OrFinder":
         r"""Or.
 
         :param second:
-        :type second: Finder
-        :rtype: "Finder"
+        :type second: Self
+        :rtype: OrFinder
         """
-        finder = deepcopy(self)
-        finder.__call__ = lambda uni: self(uni) or second(uni)
-        return finder
+        return OrFinder(finders=(self, second))
 
-    def __minus__(self, second: "Finder") -> "Finder":
+    def __minus__(self, second: Self) -> "AndFinder":
         r"""Minus.
 
         :param second:
-        :type second: Finder
-        :rtype: "Finder"
+        :type second: Self
+        :rtype: AndFinder
         """
-        finder = deepcopy(self)
-        finder.__call__ = lambda uni: self(uni) and not second(uni)
-        return finder
+        return AndFinder(finders=(self, NotFinder(finder=second)))
+
+    def __invert__(self) -> "NotFinder":
+        r"""Invert.
+
+        :rtype: NotFinder
+        """
+        return NotFinder(finder=self)
+
+    def __enter__(self) -> None:
+        self.level += 1
+
+    def __exit__(self, type, value, tb) -> None:
+        self.level -= 1
+
+    def uni2diagnostic(self, uni: UNI) -> Diagnostic:
+        r"""Uni2diagnostic.
+
+        :param uni:
+        :type uni: UNI
+        :rtype: Diagnostic
+        """
+        return uni.get_diagnostic(self.message, self.severity)
+
+    def unis2diagnostics(self, unis: list[UNI]) -> list[Diagnostic]:
+        r"""Unis2diagnostics.
+
+        :param unis:
+        :type unis: list[UNI]
+        :rtype: list[Diagnostic]
+        """
+        return [self.uni2diagnostic(uni) for uni in unis]
 
     def is_include_node(self, node: Node) -> bool:
         r"""Is include node.
@@ -283,7 +245,9 @@ class Finder:
         :type uri: str
         :rtype: Tree | None
         """
-        path = UNI.uri2path(uri)
+        path = to_fs_path(uri)
+        if path is None:
+            raise TypeError
         if not os.path.exists(path):
             return None
         with open(path, "rb") as f:
@@ -292,13 +256,13 @@ class Finder:
 
     def uni2uri(self, uni: UNI) -> str:
         r"""Convert UNI to node's URI. Used by ``move_cursor()`` to parse
-        recursively. Override it if necessary.
+        recursively. Override it if necessary. *Visitor pattern*.
 
         :param uni:
         :type uni: UNI
         :rtype: str
         """
-        return uni.get_uri()
+        return uni.uri
 
     def move_cursor(
         self, uri: str, cursor: TreeCursor, is_all: bool = False
@@ -318,27 +282,26 @@ class Finder:
         :type is_all: bool
         :rtype: str | None
         """
+        if cursor.node is None:
+            raise TypeError
         while self(UNI(uri, cursor.node)) is False:
-            if self.is_include_node(cursor.node) and self.level < LEVEL:
-                self.level += 1
-                # push current uri
-                old_uri = uri
+            if (
+                self.is_include_node(cursor.node)
+                and self.level < self.max_level
+            ):
                 uni = UNI(uri, cursor.node)
-                # update new uri
-                uri = self.uni2uri(uni)
-                tree = self.uri2tree(uri)
-                # skip if cannot convert ``uni``'s ``include_node`` to a tree.
+                new_uri = self.uni2uri(uni)
+                tree = self.uri2tree(new_uri)
+                # skip if cannot convert `uni`'s `include_node` to a tree
                 if tree is not None:
-                    if is_all:
-                        # don't ``self.reset()`` to use ``self.unis`` again.
-                        self.find_all(uri, tree, False)
-                    else:
-                        result = self.find(uri, tree)
-                        if result is not None:
-                            return uri
-                # pop current uri
-                uri = old_uri
-                self.level -= 1
+                    with self:
+                        if is_all:
+                            # don't `self.reset()` to use `self.unis` again
+                            self.find_all(new_uri, tree, False)
+                        else:
+                            result = self.find(new_uri, tree)
+                            if result is not None:
+                                return new_uri
             if cursor.node.child_count > 0:
                 cursor.goto_first_child()
                 continue
@@ -393,6 +356,8 @@ class Finder:
         :rtype: UNI | None
         """
         cursor = self.prepare(uri, tree, reset).walk()
+        if cursor.node is None:
+            raise TypeError
         _uri = self.move_cursor(uri, cursor, False)
         if _uri is not None:
             return UNI(_uri, cursor.node)
@@ -411,6 +376,8 @@ class Finder:
         :rtype: list[UNI]
         """
         cursor = self.prepare(uri, tree, reset).walk()
+        if cursor.node is None:
+            raise TypeError
         while True:
             _uri = self.move_cursor(uri, cursor, True)
             if _uri is not None:
@@ -421,24 +388,6 @@ class Finder:
                 if cursor.node.parent is None:
                     return self.unis
             cursor.goto_next_sibling()
-
-    def uni2diagnostic(self, uni: UNI) -> Diagnostic:
-        r"""Uni2diagnostic.
-
-        :param uni:
-        :type uni: UNI
-        :rtype: Diagnostic
-        """
-        return uni.get_diagnostic(self.message, self.severity)
-
-    def unis2diagnostics(self, unis: list[UNI]) -> list[Diagnostic]:
-        r"""Unis2diagnostics.
-
-        :param unis:
-        :type unis: list[UNI]
-        :rtype: list[Diagnostic]
-        """
-        return [self.uni2diagnostic(uni) for uni in unis]
 
     def get_diagnostics(self, uri: str, tree: Tree) -> list[Diagnostic]:
         r"""Get diagnostics.
@@ -482,3 +431,27 @@ class Finder:
         return [
             uni.get_document_link(template) for uni in self.find_all(uri, tree)
         ]
+
+
+@dataclass
+class AndFinder(Finder):
+    finders: tuple[Finder, ...] = ()
+
+    def __call__(self, uni: UNI) -> bool:
+        return all(finder(uni) for finder in self.finders)
+
+
+@dataclass
+class OrFinder(Finder):
+    finders: tuple[Finder, ...] = ()
+
+    def __call__(self, uni: UNI) -> bool:
+        return any(finder(uni) for finder in self.finders)
+
+
+@dataclass
+class NotFinder(Finder):
+    finder: Finder = field(default_factory=Finder)
+
+    def __call__(self, uni: UNI) -> bool:
+        return not self.finder(uni)

@@ -140,10 +140,10 @@ class Trie:
         if parent is None:
             _range = Range(Position(0, 0), Position(1, 0))
         else:
-            _range = UNI.node2range(node)
+            _range = UNI("", node).range
         trie = cls(_range, parent, {})
         trie.value = {
-            UNI.node2text(child.children[0]): cls.from_node(child, trie)
+            UNI("", child.children[0]).text: cls.from_node(child, trie)
             for child in node.children
         }
         return trie

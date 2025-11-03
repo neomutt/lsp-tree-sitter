@@ -78,7 +78,7 @@ class NotFileFinder(Finder):
         :type uni: UNI
         :rtype: bool
         """
-        path = uni.get_path()
+        path = uni.path
         return not (os.path.isfile(path) or os.path.isdir(path))
 
 
@@ -247,7 +247,7 @@ class UnFixedOrderFinder(RepeatedFinder):
         :type uni: UNI
         :rtype: bool
         """
-        return uni.get_text() in self.order
+        return uni.text in self.order
 
     def compare(self, uni: UNI, _uni: UNI) -> bool:
         r"""Compare.
@@ -258,9 +258,7 @@ class UnFixedOrderFinder(RepeatedFinder):
         :type _uni: UNI
         :rtype: bool
         """
-        return self.order.index(uni.get_text()) < self.order.index(
-            _uni.get_text()
-        )
+        return self.order.index(uni.text) < self.order.index(_uni.text)
 
 
 @dataclass(init=False)
