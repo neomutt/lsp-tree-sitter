@@ -9,6 +9,7 @@ to a formatter.
 from collections.abc import Callable
 
 from lsprotocol.types import Position, Range, TextEdit
+from pygls.uris import from_fs_path
 from tree_sitter import Tree
 
 from . import Finder
@@ -79,10 +80,13 @@ def format_by_finders(
         with open(path, "rb") as f:
             src = f.read()
         tree = parse(src)
+        uri = from_fs_path(path)
+        if uri is None:
+            continue
         text_edits = [
             text_edit
             for finder in finders
-            for text_edit in finder.get_text_edits(path, tree)
+            for text_edit in finder.get_text_edits(uri, tree)
         ]
         src = apply_text_edits(text_edits, src.decode())
         with open(path, "w") as f:

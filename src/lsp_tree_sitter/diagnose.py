@@ -11,6 +11,7 @@ from collections.abc import Callable
 from typing import Literal
 
 from lsprotocol.types import Diagnostic, DiagnosticSeverity
+from pygls.uris import from_fs_path
 from tree_sitter import Tree
 
 from . import Finder
@@ -162,7 +163,10 @@ def check_by_finders(
         with open(path, "rb") as f:
             src = f.read()
         tree = parse(src)
-        diagnostics = get_diagnostics_by_finders(path, tree, finders)
+        uri = from_fs_path(path)
+        if uri is None:
+            continue
+        diagnostics = get_diagnostics_by_finders(uri, tree, finders)
         count += count_level(diagnostics)
         lines += diagnostics2linter_messages(path, diagnostics, color)
     if text := "\n".join(lines):
