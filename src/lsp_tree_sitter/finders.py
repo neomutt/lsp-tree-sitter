@@ -4,7 +4,7 @@ r"""Finders
 
 import os
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from jinja2 import Template
@@ -88,6 +88,8 @@ class RepeatedFinder(Finder):
 
     message: str = "{{uni.get_text()}}: is repeated on {{_uni}}"
     severity: DiagnosticSeverity = DiagnosticSeverity.Warning
+    repeated_unis: list[UNI] = field(default_factory=list)
+    uni_pairs: list[tuple[UNI, UNI]] = field(default_factory=list)
 
     def reset(self) -> None:
         r"""Reset.
@@ -96,7 +98,7 @@ class RepeatedFinder(Finder):
         """
         self.level = 0
         self.unis = []
-        self._unis = []
+        self.repeated_unis = []
         self.uni_pairs = []
 
     def filter(self, uni: UNI) -> bool:
@@ -128,11 +130,11 @@ class RepeatedFinder(Finder):
         """
         if self.filter(uni) is False:
             return False
-        for _uni in self._unis:
+        for _uni in self.repeated_unis:
             if self.compare(uni, _uni):
-                self.uni_pairs += [[uni, _uni]]
+                self.uni_pairs += [(uni, _uni)]
                 return True
-        self._unis += [uni]
+        self.repeated_unis += [uni]
         return False
 
     def get_definitions(self, uni: UNI) -> list[Location]:
@@ -145,7 +147,7 @@ class RepeatedFinder(Finder):
         for uni_, _uni in self.uni_pairs:
             # cache hit
             if uni == uni_:
-                return [_uni.get_location()]
+                return [_uni.location]
         return []
 
     def get_references(self, uni: UNI) -> list[Location]:
@@ -159,7 +161,7 @@ class RepeatedFinder(Finder):
         for uni_, _uni in self.uni_pairs:
             # cache hit
             if uni == _uni:
-                locations += [uni_.get_location()]
+                locations += [uni_.location]
         return locations
 
     def get_text_edits(self, uri: str, tree: Tree) -> list[TextEdit]:
@@ -176,8 +178,8 @@ class RepeatedFinder(Finder):
         for uni, _uni in self.uni_pairs:
             # swap 2 unis
             return [
-                uni.get_text_edit(_uni.get_text()),
-                _uni.get_text_edit(uni.get_text()),
+                uni.get_text_edit(_uni.text),
+                _uni.get_text_edit(uni.text),
             ]
         return []
 
@@ -436,8 +438,8 @@ class RequiresFinder(Finder):
         :type severity: DiagnosticSeverity
         :rtype: None
         """
-        self.requires = requires
-        # will call reset() which will call self.requires
+        self.initial_requires = requires
+        self.requires = deepcopy(self.initial_requires)
         super().__init__(message, severity)
 
     def reset(self) -> None:
@@ -447,7 +449,7 @@ class RequiresFinder(Finder):
         """
         self.level = 0
         self.unis = []
-        self._requires = deepcopy(self.requires)
+        self.requires = deepcopy(self.initial_requires)
 
     def filter(self, uni: UNI, require: Any) -> bool:
         r"""Filter.
@@ -468,10 +470,10 @@ class RequiresFinder(Finder):
         :rtype: bool
         """
         found = set()
-        for require in self._requires:
+        for require in self.requires:
             if self.filter(uni, require):
                 found |= {require}
-        self._requires -= found
+        self.requires -= found
         return False
 
     def require2message(self, require: Any, **kwargs: Any) -> str:
@@ -506,7 +508,7 @@ class RequiresFinder(Finder):
                 self.require2message(i),
                 self.severity,
             )
-            for i in self._requires
+            for i in self.requires
         ]
 
 
