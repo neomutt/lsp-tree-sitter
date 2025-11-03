@@ -28,7 +28,7 @@ from .schema import Trie
 class ErrorFinder(Finder):
     r"""Errorfinder."""
 
-    message: str = "{{uni.get_text()}}: error"
+    message: str = "{{uni.text}}: error"
     severity: DiagnosticSeverity = DiagnosticSeverity.Error
 
     def __call__(self, uni: UNI) -> bool:
@@ -48,7 +48,7 @@ class ErrorFinder(Finder):
 class MissingFinder(Finder):
     r"""Missingfinder."""
 
-    message: str = "{{uni.get_text()}}: missing"
+    message: str = "{{uni.text}}: missing"
     severity: DiagnosticSeverity = DiagnosticSeverity.Error
 
     def __call__(self, uni: UNI) -> bool:
@@ -68,7 +68,7 @@ class MissingFinder(Finder):
 class NotFileFinder(Finder):
     r"""NotFilefinder."""
 
-    message: str = "{{uni.get_text()}}: no such file or directory"
+    message: str = "{{uni.text}}: no such file or directory"
     severity: DiagnosticSeverity = DiagnosticSeverity.Error
 
     def __call__(self, uni: UNI) -> bool:
@@ -86,7 +86,7 @@ class NotFileFinder(Finder):
 class RepeatedFinder(Finder):
     r"""Repeatedfinder."""
 
-    message: str = "{{uni.get_text()}}: is repeated on {{_uni}}"
+    message: str = "{{uni.text}}: is repeated on {{_uni}}"
     severity: DiagnosticSeverity = DiagnosticSeverity.Warning
     repeated_unis: list[UNI] = field(default_factory=list)
     uni_pairs: list[tuple[UNI, UNI]] = field(default_factory=list)
@@ -202,7 +202,7 @@ class RepeatedFinder(Finder):
 class UnsortedFinder(RepeatedFinder):
     r"""Unsortedfinder."""
 
-    message: str = "{{uni.get_text()}}: is unsorted due to {{_uni}}"
+    message: str = "{{uni.text}}: is unsorted due to {{_uni}}"
     severity: DiagnosticSeverity = DiagnosticSeverity.Warning
 
     def compare(self, uni: UNI, _uni: UNI) -> bool:
@@ -226,7 +226,7 @@ class UnFixedOrderFinder(RepeatedFinder):
     def __init__(
         self,
         order: list[Any],
-        message: str = "{{uni.get_text()}}: is unsorted due to {{_uni}}",
+        message: str = "{{uni.text}}: is unsorted due to {{_uni}}",
         severity: DiagnosticSeverity = DiagnosticSeverity.Warning,
     ) -> None:
         r"""Init.

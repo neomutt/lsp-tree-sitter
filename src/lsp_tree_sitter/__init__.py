@@ -126,7 +126,7 @@ class UNI:
         return TextEdit(self.range, new_text)
 
     def get_document_link(
-        self, target: str = "{{uni.get_uri()}}", **kwargs: Any
+        self, target: str = "{{uni.uri}}", **kwargs: Any
     ) -> DocumentLink:
         r"""Get document link.
 
@@ -415,7 +415,7 @@ class Finder:
         return []
 
     def get_document_links(
-        self, uri: str, tree: Tree, template: str = "{{uni.get_uri()}}"
+        self, uri: str, tree: Tree, template: str = "{{uni.uri}}"
     ) -> list[DocumentLink]:
         r"""Get document links.
 
