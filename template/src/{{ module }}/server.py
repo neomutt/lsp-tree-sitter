@@ -129,7 +129,7 @@ class {{ class }}(LanguageServer):
             )
             if uni is None:
                 return None
-            text = uni.get_text()
+            text = uni.text
             result = None
             if uni.node.range.start_point[1] == 0:
                 result = get_schema()["properties"].get(text)
@@ -141,7 +141,7 @@ class {{ class }}(LanguageServer):
                 return None
             return Hover(
                 MarkupContent(MarkupKind.Markdown, result["description"]),
-                uni.get_range(),
+                uni.range,
             )
 
         @self.feature(TEXT_DOCUMENT_COMPLETION)
@@ -160,7 +160,7 @@ class {{ class }}(LanguageServer):
             )
             if uni is None:
                 return CompletionList(False, [])
-            text = uni.get_text()
+            text = uni.text
             if uni.node.range.start_point[1] == 0:
                 return CompletionList(
                     False,
