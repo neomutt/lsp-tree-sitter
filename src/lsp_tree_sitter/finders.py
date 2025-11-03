@@ -626,4 +626,4 @@ class QueryFinder(Finder):
         :type uri: str
         :rtype: UNI | None
         """
-        return UNI(uri, nodes[0])
+        return UNI(nodes[0], uri)

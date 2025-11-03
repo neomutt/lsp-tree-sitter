@@ -33,8 +33,8 @@ class UNI:
     ``uri`` and ``path`` is document's uri and path.
     """
 
-    uri: str
     node: Node
+    uri: str = ""
 
     def __str__(self) -> str:
         r"""Str.
@@ -284,12 +284,12 @@ class Finder:
         """
         if cursor.node is None:
             raise TypeError
-        while self(UNI(uri, cursor.node)) is False:
+        while self(UNI(cursor.node, uri)) is False:
             if (
                 self.is_include_node(cursor.node)
                 and self.level < self.max_level
             ):
-                uni = UNI(uri, cursor.node)
+                uni = UNI(cursor.node, uri)
                 new_uri = self.uni2uri(uni)
                 tree = self.uri2tree(new_uri)
                 # skip if cannot convert `uni`'s `include_node` to a tree
@@ -360,7 +360,7 @@ class Finder:
             raise TypeError
         _uri = self.move_cursor(uri, cursor, False)
         if _uri is not None:
-            return UNI(_uri, cursor.node)
+            return UNI(cursor.node, _uri)
 
     def find_all(
         self, uri: str, tree: Tree | None = None, reset: bool = True
@@ -381,7 +381,7 @@ class Finder:
         while True:
             _uri = self.move_cursor(uri, cursor, True)
             if _uri is not None:
-                self.unis += [UNI(_uri, cursor.node)]
+                self.unis += [UNI(cursor.node, _uri)]
             while cursor.node.next_sibling is None:
                 cursor.goto_parent()
                 # when cannot find new nodes, return
