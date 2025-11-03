@@ -4,6 +4,7 @@ r"""LSP Tree sitter
 
 import os
 from dataclasses import dataclass, field
+from types import TracebackType
 from typing import Any, Self
 
 from jinja2 import Template
@@ -198,7 +199,12 @@ class Finder:
     def __enter__(self) -> None:
         self.level += 1
 
-    def __exit__(self, type, value, tb) -> None:
+    def __exit__(
+        self,
+        type: type[BaseException] | None,
+        value: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         self.level -= 1
 
     def uni2diagnostic(self, uni: UNI) -> Diagnostic:
