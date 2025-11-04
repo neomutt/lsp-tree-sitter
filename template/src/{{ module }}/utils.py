@@ -36,8 +36,10 @@ def get_query(name: str, filetype: FILETYPE = "{{ language }}") -> Query:
             )
         ) as f:
             text = f.read()
-
-        QUERIES[name] = parser.language.query(text)
+        if parser.language:
+            QUERIES[name] = Query(parser.language, text)
+        else:
+            raise NotImplementedError
     return QUERIES[name]
 
 
