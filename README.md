@@ -55,7 +55,7 @@ I've had enough of writing many DSLs in my editor without any LSP support
   - ...
 - [mutt-language-server](https://github.com/neomutt/mutt-language-server):
   for [(neo)mutt](https://github.com/neomutt/neomutt)'s (neo)muttrc
-- [More](https://github.com/Freed-Wu?tab=repositories&q=lsp-server)
+- [More LSP servers](https://github.com/Freed-Wu?tab=repositories&q=lsp-server)
 
 ## Usage
 
@@ -166,7 +166,7 @@ Such as, if you want to get the node under the cursor:
 ```python
 @self.feature(TEXT_DOCUMENT_COMPLETION)
 def completions(params: CompletionParams) -> CompletionList:
-    document = self.workspace.get_document(params.text_document.uri)
+    document = self.workspace.get_text_document(params.text_document.uri)
     uni = PositionFinder(params.position, right_equal=True).find(
         document.uri, self.trees[document.uri]
     )
@@ -218,10 +218,6 @@ the following steps:
 
 1. Create a tree-sitter-parser from [template](https://github.com/tree-sitter-grammars/template).
 2. Publish it to PYPI
-
-You can see if
-[py-tree-sitter-languages](https://github.com/grantjenks/py-tree-sitter-languages)
-supports the language where you want to create a language server.
 
 ### Copy a template
 
