@@ -550,7 +550,7 @@ class SchemaFinder(Finder):
         trie = self.cls.from_tree(tree)
         return [
             Diagnostic(
-                trie.from_path(error.json_path).range,
+                trie[error.json_path].range,
                 error.message,
                 DiagnosticSeverity.Error,
             )
