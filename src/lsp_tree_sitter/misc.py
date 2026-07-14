@@ -4,7 +4,7 @@ r"""Misc
 
 from gzip import decompress
 from pathlib import Path
-from subprocess import check_output  # nosec: B404
+from subprocess import check_output
 from typing import Literal
 from urllib import request
 
@@ -45,7 +45,7 @@ def get_man(filename: str) -> str:
                 with open(file, "rb") as f:
                     text = f.read()
                 break
-            except Exception:  # nosec: B112
+            except Exception:
                 continue
     if text == b"":
         raise FileNotFoundError
@@ -71,7 +71,7 @@ def get_info(filename: str) -> str:
                 with open(file, "rb") as f:
                     text = f.read()
                 break
-            except Exception:  # nosec: B112
+            except Exception:
                 continue
     if text == b"":
         raise FileNotFoundError
@@ -114,14 +114,14 @@ def get_soup(
     :rtype: BeautifulSoup
     """
     if uri_scheme(uri):
-        with request.urlopen(uri) as f:  # nosec: B310
+        with request.urlopen(uri) as f:
             html = f.read()
     else:
         text = get_man(uri)
         if converter == "pandoc":
             html = convert_text(text, "html", filetype)
         else:
-            html = check_output(  # nosec: B603 B607
+            html = check_output(
                 ["groff", "-m", filetype, "-Thtml"],
                 input=text.encode(),
             ).decode()

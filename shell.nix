@@ -1,17 +1,21 @@
-{ pkgs ? import <nixpkgs> { } }:
+{
+  pkgs ? import <nixpkgs> { },
+}:
 
 with pkgs;
 mkShell {
   name = "lsp-tree-sitter";
   buildInputs = [
-      (python3.withPackages (
-        p: with p; [
-          pytest
+    (python3.withPackages (
+      p: with p; [
+        uv
+        pytest
 
-          jinja2
-          pygls
-          tree-sitter
-        ]
-      ))
+        jq
+        jsonschema
+        pygls
+        tree-sitter
+      ]
+    ))
   ];
 }

@@ -1,81 +1,64 @@
-[build-system]
-requires = ["setuptools_scm[toml] >= 6.2", "setuptools-generate >= 0.0.6"]
-build-backend = "setuptools.build_meta"
-
-# https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html
 [project]
 name = "lsp-tree-sitter"
-description = "a library to create language servers"
+version = "0.2.0"
+description = "A library to create language servers."
 readme = "README.md"
-# type_a | type_b
-requires-python = ">= 3.10"
-keywords = ["language server", "tree sitter", "json schema"]
-classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Intended Audience :: Developers",
-  "Topic :: Software Development :: Build Tools",
-  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-  "Operating System :: Microsoft :: Windows",
-  "Operating System :: POSIX",
-  "Operating System :: Unix",
-  "Operating System :: MacOS",
-  "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
+requires-python = ">=3.10"
+license = "GPL-3.0-or-later"
+authors = [{ name = "Wu, Zhenyu", email = "wuzhenyu@ustc.edu" }]
+keywords = ["json schema", "language server", "tree sitter"]
+dependencies = [
+  "jq>=1",
+  "jsonschema>=4",
+  "pygls>=2",
+  "tree-sitter>=0.24",
 ]
-dynamic = ["version", "dependencies", "optional-dependencies"]
-
-[[project.authors]]
-name = "Wu, Zhenyu"
-email = "wuzhenyu@ustc.edu"
-
-[project.license]
-text = "GPL v3"
 
 [project.urls]
-Homepage = "https://lsp-tree-sitter.readthedocs.io"
-Download = "https://github.com/neomutt/lsp-tree-sitter/releases"
 "Bug Report" = "https://github.com/neomutt/lsp-tree-sitter/issues"
+Download = "https://github.com/neomutt/lsp-tree-sitter/releases"
+Homepage = "https://lsp-tree-sitter.readthedocs.io"
 Source = "https://github.com/neomutt/lsp-tree-sitter"
 
-[tool.setuptools.package-data]
-lsp_tree_sitter = ["py.typed", "assets/**"]
+[project.optional-dependencies]
+colorize = [
+  "pygments>=2.20.0",
+]
+completion = [
+  "shtab>=1.8.1",
+]
+dev = [
+  "pytest-cov>=7.1.0",
+]
+misc = [
+  "beautifulsoup4>=4.15.0",
+  "markdown-it-py>=4.2.0",
+  "platformdirs>=4.10.1",
+  "pypandoc>=1.17",
+]
+toml = [
+  "tomli-w>=1.2.0",
+]
+yaml = [
+  "pyyaml>=6.0.3",
+]
 
-[tool.setuptools.dynamic.dependencies]
-file = "requirements.txt"
+[build-system]
+requires = ["uv_build<0.12"]
+build-backend = "uv_build"
 
-# begin: scripts/update-pyproject.toml.pl
-[tool.setuptools.dynamic.optional-dependencies.colorize]
-file = "requirements/colorize.txt"
-
-[tool.setuptools.dynamic.optional-dependencies.dev]
-file = "requirements/dev.txt"
-
-[tool.setuptools.dynamic.optional-dependencies.misc]
-file = "requirements/misc.txt"
-
-[tool.setuptools.dynamic.optional-dependencies.toml]
-file = "requirements/toml.txt"
-
-[tool.setuptools.dynamic.optional-dependencies.yaml]
-file = "requirements/yaml.txt"
-# end: scripts/update-pyproject.toml.pl
-
-[tool.setuptools_scm]
-write_to = "src/lsp_tree_sitter/_version.py"
-
-[tool.setuptools-generate]
-write-to = "src/lsp_tree_sitter/_metainfo.py"
-
-[tool.mdformat]
-number = true
+[tool.coverage.report]
+exclude_lines = [
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+  "\\s*import tomli as tomllib",
+]
 
 [tool.doq]
 template_path = "templates"
+
+[tool.mdformat]
+number = true
 
 [tool.ruff]
 line-length = 79
@@ -101,10 +84,3 @@ preview = true
 [tool.ruff.format]
 docstring-code-format = true
 preview = true
-
-[tool.coverage.report]
-exclude_lines = [
-  "if TYPE_CHECKING:",
-  "if __name__ == .__main__.:",
-  "\\s*import tomli as tomllib",
-]
