@@ -222,8 +222,24 @@ class SchemaCompleter(Completer):
 class ValueCompleter(SchemaCompleter):
     r"""For ``set option value``."""
 
+    selectors: tuple[str, ...] = ("-",)
+    regex: re.Pattern = field(
+        default_factory=lambda: re.compile(r"([-+^]|\d+)")
+    )
+
     def args_callback(self, node: Node | None, point: Point) -> dict[str, Any]:
         args = super().args_callback(node, point)
-        prev = node.prev_sibling if node else None
-        args["prev"] = Linter.text_callback(prev) if prev else ""
+        args["texts"] = []
+        for selector in self.selectors:
+            for op in self.regex.findall(selector):
+                match op:
+                    case "^":
+                        node = node.parent if node else None
+                    case "+":
+                        node = node.next_sibling if node else None
+                    case "-":
+                        node = node.prev_sibling if node else None
+                    case x:
+                        node = node.child(int(x)) if node else None
+            args["texts"] += [Linter.text_callback(node) if node else ""]
         return args
