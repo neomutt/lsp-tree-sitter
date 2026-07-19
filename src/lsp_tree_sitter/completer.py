@@ -191,12 +191,14 @@ class SchemaCompleter(Completer):
     code: str
 
     @classmethod
-    def from_files(cls, schema_file: str, code_file: str) -> "SchemaCompleter":
+    def from_files(
+        cls, schema_file: str, code_file: str, *args, **kwargs
+    ) -> "SchemaCompleter":
         with open(schema_file) as f:
             schema = json.load(f)
         with open(code_file) as f:
             code = f.read()
-        return cls(schema, code)
+        return cls(schema, code, *args, **kwargs)
 
     @staticmethod
     def query(

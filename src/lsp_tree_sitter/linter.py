@@ -190,6 +190,8 @@ class SchemaLinter(Linter):
         for error in self.validator.iter_errors(text_instance):
             # strip $
             code = error.json_path[1:].replace("'", '"')
+            if len(code) == 0 or code[0] != ".":
+                code = "." + code
             program = jq.compile(code)
             tup = program.input_value(tuple_instance).first()
 
