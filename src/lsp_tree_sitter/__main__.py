@@ -70,7 +70,7 @@ def main():
     r"""
     from .server import XXXLanguageServer as Server
 
-    server = Server()
+    server = Server(version=__version__)
     server.run(args)
     """
     print(args)
