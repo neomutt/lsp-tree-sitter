@@ -85,6 +85,8 @@ class PathLinter(Linter):
     r"""Diagnose incorrect path and link correct path"""
 
     label: str = "string.special.path"
+    expanduser: bool = True
+    expandvars: bool = True
 
     @classmethod
     def from_queries(
@@ -116,6 +118,10 @@ class PathLinter(Linter):
             for node in nodes:
                 range = self.range_callback(node)
                 text = self.text_callback(node)
+                if self.expanduser:
+                    text = os.path.expanduser(text)
+                if self.expandvars:
+                    text = os.path.expandvars(text)
                 filepath = os.path.join(dirname, text)
                 exist = os.path.exists(filepath)
                 if exist if callback != self.get_link else not exist:
