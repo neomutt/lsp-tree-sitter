@@ -292,7 +292,7 @@ class PackageSearcher:
 class PackageCompleter(Completer):
     """Complete package names."""
 
-    searchers: dict[str, PackageSearcher]
+    searcher_getter: Callable[[str], PackageSearcher | None]
 
     @staticmethod
     def get_filetype(path: str, filetypes: Iterable[str]) -> str | None:
@@ -306,10 +306,9 @@ class PackageCompleter(Completer):
     def __call__(
         self, args: dict[str, Any], path: str, node: Node | None = None
     ) -> list[dict[str, Any]]:
-        filetype = self.get_filetype(path, self.searchers)
-        if filetype is None:
+        searcher = self.searcher_getter(path)
+        if searcher is None:
             return []
-        searcher = self.searchers[filetype]
 
         if not searcher(node):
             return []
