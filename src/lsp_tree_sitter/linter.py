@@ -27,7 +27,16 @@ from tree_sitter import Language, Node, Query, QueryCursor, Tree
 
 
 @dataclass
-class Linter:
+class LinterBase:
+    def diagnose(self, tree: Tree, path: str) -> list[Diagnostic]:
+        raise NotImplementedError
+
+    def link(self, tree: Tree, path: str) -> list[DocumentLink]:
+        raise NotImplementedError
+
+
+@dataclass
+class Linter(LinterBase):
     query: Query
 
     def __post_init__(self):
