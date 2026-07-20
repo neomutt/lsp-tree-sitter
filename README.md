@@ -27,11 +27,11 @@
 [![github/repo-size](https://shields.io/github/repo-size/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter)
 [![github/v](https://shields.io/github/v/release/neomutt/lsp-tree-sitter)](https://github.com/neomutt/lsp-tree-sitter)
 
-[![aur/votes](https://img.shields.io/aur/votes/lsp-tree-sitter)](https://aur.archlinux.org/packages/lsp-tree-sitter)
-[![aur/popularity](https://img.shields.io/aur/popularity/lsp-tree-sitter)](https://aur.archlinux.org/packages/lsp-tree-sitter)
-[![aur/maintainer](https://img.shields.io/aur/maintainer/lsp-tree-sitter)](https://aur.archlinux.org/packages/lsp-tree-sitter)
-[![aur/last-modified](https://img.shields.io/aur/last-modified/lsp-tree-sitter)](https://aur.archlinux.org/packages/lsp-tree-sitter)
-[![aur/version](https://img.shields.io/aur/version/lsp-tree-sitter)](https://aur.archlinux.org/packages/lsp-tree-sitter)
+[![aur/votes](https://img.shields.io/aur/votes/python-lsp-tree-sitter)](https://aur.archlinux.org/packages/python-lsp-tree-sitter)
+[![aur/popularity](https://img.shields.io/aur/popularity/python-lsp-tree-sitter)](https://aur.archlinux.org/packages/python-lsp-tree-sitter)
+[![aur/maintainer](https://img.shields.io/aur/maintainer/python-lsp-tree-sitter)](https://aur.archlinux.org/packages/python-lsp-tree-sitter)
+[![aur/last-modified](https://img.shields.io/aur/last-modified/python-lsp-tree-sitter)](https://aur.archlinux.org/packages/python-lsp-tree-sitter)
+[![aur/version](https://img.shields.io/aur/version/python-lsp-tree-sitter)](https://aur.archlinux.org/packages/python-lsp-tree-sitter)
 
 [![pypi/status](https://shields.io/pypi/status/lsp-tree-sitter)](https://pypi.org/project/lsp-tree-sitter/#description)
 [![pypi/v](https://shields.io/pypi/v/lsp-tree-sitter)](https://pypi.org/project/lsp-tree-sitter/#history)
