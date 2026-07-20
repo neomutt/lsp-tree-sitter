@@ -5,6 +5,7 @@ r"""Completer
 import json
 import os
 import re
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass, field
 from glob import glob
@@ -187,18 +188,27 @@ class PathCompleter(Completer):
 
 @dataclass
 class SchemaCompleter(Completer):
-    schema: dict
     code: str
+    schema_getter: Callable[[str], dict]
 
     @classmethod
     def from_files(
-        cls, schema_file: str, code_file: str, *args, **kwargs
+        cls,
+        schema_getter: str | Callable[[str], Any],
+        code_file: str,
+        *args,
+        **kwargs,
     ) -> "SchemaCompleter":
-        with open(schema_file) as f:
-            schema = json.load(f)
         with open(code_file) as f:
             code = f.read()
-        return cls(schema, code, *args, **kwargs)
+        if isinstance(schema_getter, str):
+            with open(schema_getter) as f:
+                schema = json.load(f)
+
+            def schema_getter(_: str):
+                return schema
+
+        return cls(code, schema_getter, *args, **kwargs)
 
     @staticmethod
     def query(
@@ -217,7 +227,8 @@ class SchemaCompleter(Completer):
     def __call__(
         self, args: dict[str, Any], path: str, node: Node | None = None
     ) -> list[dict[str, Any]]:
-        return self.query(self.code, args, self.schema)
+        schema = self.schema_getter(path)
+        return self.query(self.code, args, schema)
 
 
 @dataclass

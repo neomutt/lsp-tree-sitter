@@ -33,6 +33,17 @@ class Linter:
     def __post_init__(self):
         self.cursor = QueryCursor(self.query)
 
+    @staticmethod
+    def queries_to_query(
+        language: Language, queries: ModuleType, name: str
+    ) -> Query:
+        paths: list[str] = queries.__path__._path  # ty:ignore[unresolved-attribute]
+        query_file = os.path.join(paths[0], name)
+        with open(query_file) as f:
+            text = f.read()
+        query = Query(language, text)
+        return query
+
     def __call__(
         self,
         tree: Tree,
@@ -91,18 +102,10 @@ class PathLinter(Linter):
 
     @classmethod
     def from_queries(
-        cls, language: Language, queries: ModuleType
+        cls, language: Language, queries: ModuleType, *args, **kwargs
     ) -> "PathLinter":
-        paths: list[str] = queries.__path__._path  # ty:ignore[unresolved-attribute]
-        query_file = os.path.join(paths[0], "highlights.scm")
-        return cls.from_files(language, query_file)
-
-    @classmethod
-    def from_files(cls, language: Language, query_file: str) -> "PathLinter":
-        with open(query_file) as f:
-            text = f.read()
-        query = Query(language, text)
-        return cls(query)
+        query = cls.queries_to_query(language, queries, "highlights.scm")
+        return cls(query, *args, **kwargs)
 
     def __call__(
         self,
@@ -208,33 +211,38 @@ class Args(dict[str, str]):
 
 @dataclass
 class SchemaLinter(Linter):
-    validator: Validator
+    validator_getter: Callable[[str], Validator]
     regex: re.Pattern = field(
         default_factory=lambda: re.compile(r"\('([^']+)' was unexpected\)")
     )
 
     @classmethod
     def from_queries(
-        cls, language: Language, queries: ModuleType, schema_file: str
+        cls,
+        language: Language,
+        queries: ModuleType,
+        schema_getter: str | Callable[[str], Any],
     ) -> "SchemaLinter":
-        paths: list[str] = queries.__path__._path  # ty:ignore[unresolved-attribute]
-        query_file = os.path.join(paths[0], "schema.scm")
-        return cls.from_files(language, query_file, schema_file)
+        query = cls.queries_to_query(language, queries, "schema.scm")
+
+        if isinstance(schema_getter, str):
+            with open(schema_getter) as f:
+                schema = json.load(f)
+
+            def schema_getter(_: str):
+                return schema
+
+        return cls.from_schema(query, schema_getter)
 
     @classmethod
-    def from_files(
-        cls, language: Language, query_file: str, schema_file: str
+    def from_schema(
+        cls, query: Query, schema_getter: Callable[[str], Any]
     ) -> "SchemaLinter":
-        with open(query_file) as f:
-            text = f.read()
-        query = Query(language, text)
-        with open(schema_file) as f:
-            schema = json.load(f)
-        return cls.from_schema(query, schema)
+        def validator_getter(path: str) -> Validator:
+            schema = schema_getter(path)
+            return validator_for(schema)(schema)
 
-    @classmethod
-    def from_schema(cls, query: Query, schema: dict) -> "SchemaLinter":
-        return cls(query, validator_for(schema)(schema))
+        return cls(query, validator_getter)
 
     @staticmethod
     def tuple_is_range(tup) -> bool:
@@ -263,7 +271,8 @@ class SchemaLinter(Linter):
         text_instance = self.instantiate(matches, self.text_callback)
         tuple_instance = self.instantiate(matches, self.tuple_callback)
         items = []
-        for error in self.validator.iter_errors(text_instance):
+        validator = self.validator_getter(path)
+        for error in validator.iter_errors(text_instance):
             # strip $
             code = error.json_path[1:].replace("'", '"')
             if len(code) == 0 or code[0] != ".":
