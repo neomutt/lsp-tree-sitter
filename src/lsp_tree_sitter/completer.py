@@ -194,8 +194,8 @@ class SchemaCompleter(Completer):
     @classmethod
     def from_files(
         cls,
-        schema_getter: str | Callable[[str], Any],
         code_file: str,
+        schema_getter: str | Callable[[str], Any],
         *args,
         **kwargs,
     ) -> "SchemaCompleter":
