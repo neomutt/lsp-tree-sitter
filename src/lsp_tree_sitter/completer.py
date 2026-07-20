@@ -5,7 +5,7 @@ r"""Completer
 import json
 import os
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass, field
 from glob import glob
@@ -240,19 +240,108 @@ class ValueCompleter(SchemaCompleter):
         default_factory=lambda: re.compile(r"([-+^]|\d+)")
     )
 
+    @staticmethod
+    def parse_selector(
+        selector: str, node: Node | None, regex: re.Pattern
+    ) -> Node | None:
+        for op in regex.findall(selector):
+            match op:
+                case "^":
+                    node = node.parent if node else None
+                case "+":
+                    node = node.next_sibling if node else None
+                case "-":
+                    node = node.prev_sibling if node else None
+                case x:
+                    node = node.child(int(x)) if node else None
+        return node
+
     def args_callback(self, node: Node | None, point: Point) -> dict[str, Any]:
         args = super().args_callback(node, point)
         args["texts"] = []
         for selector in self.selectors:
-            for op in self.regex.findall(selector):
-                match op:
-                    case "^":
-                        node = node.parent if node else None
-                    case "+":
-                        node = node.next_sibling if node else None
-                    case "-":
-                        node = node.prev_sibling if node else None
-                    case x:
-                        node = node.child(int(x)) if node else None
+            node = self.parse_selector(selector, node, self.regex)
             args["texts"] += [Linter.text_callback(node) if node else ""]
         return args
+
+
+@dataclass
+class PackageSearcher:
+    texts: tuple[str, ...]
+    kind: str = "variable_name"
+    selector: str = "^-"
+
+    def __call__(self, node: Node | None) -> bool:
+        node = ValueCompleter.parse_selector(
+            self.selector, node, ValueCompleter.regex
+        )
+        return not (
+            node is None
+            or node.type != self.kind
+            or Linter.text_callback(node) not in self.texts
+        )
+
+    def get_package_document(self, name: str) -> str | None:
+        raise NotImplementedError
+
+    def get_package_names(self, name: str) -> dict[str, str]:
+        raise NotImplementedError
+
+
+@dataclass
+class PackageCompleter(Completer):
+    """Complete package names."""
+
+    searchers: dict[str, PackageSearcher]
+
+    @staticmethod
+    def get_filetype(path: str, filetypes: Iterable[str]) -> str | None:
+        basename = os.path.basename(path)
+        extname = os.path.splitext(basename)[-1]
+        for filetype in filetypes:
+            name = extname if filetype.startswith("_") else basename
+            if name == filetype:
+                return filetype
+
+    def __call__(
+        self, args: dict[str, Any], path: str, node: Node | None = None
+    ) -> list[dict[str, Any]]:
+        filetype = self.get_filetype(path, self.searchers)
+        if filetype is None:
+            return []
+        searcher = self.searchers[filetype]
+
+        if not searcher(node):
+            return []
+        results = []
+        name: str = args["text"].strip()
+        if args["complete"]:
+            for package_name, document in searcher.get_package_names(
+                name
+            ).items():
+                results += [
+                    {
+                        "label": package_name,
+                        "insert_text": package_name,
+                        "kind": CompletionItemKind.Variable,
+                        "documentation": {
+                            "kind": MarkupKind.Markdown,
+                            "value": document,
+                        },
+                    }
+                ]
+        else:
+            document = searcher.get_package_document(name)
+            if document:
+                results += [
+                    {
+                        "label": args["text"],
+                        "insert_text": args["text"],
+                        "kind": CompletionItemKind.Variable,
+                        "documentation": {
+                            "kind": MarkupKind.Markdown,
+                            "value": document,
+                        },
+                    }
+                ]
+        return results
