@@ -9,6 +9,7 @@ import os
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from shlex import split
 from types import ModuleType
 from typing import Any
 
@@ -136,6 +137,75 @@ class PathLinter(Linter):
         return items
 
 
+class Args(dict[str, str]):
+    r"""Environment for jq"""
+
+    @staticmethod
+    def get_obj_type(scope: str) -> Callable[[str], Any]:
+        match scope:
+            case "integer":
+                obj_type = int
+            case "number":
+                obj_type = float
+            case "string":
+                obj_type = str
+            case "shlex":
+
+                def obj_type(x):
+                    return split(x)[0]
+
+            case boolean:
+                _, *falses = boolean.split("-")
+
+                def obj_type(x, falses=falses or ["false"]):
+                    return x not in falses
+
+        return obj_type
+
+    def parse_key(
+        self,
+        key: str,
+        lens: dict[str, int],
+        instance,
+    ) -> tuple[str, Callable[[str], Any]]:
+        code = "."
+        scopes = key.split(".")
+        obj_type = str
+        for scope in scopes:
+            if scope == "-":
+                if code not in lens:
+                    lens[code] = self.get_len_by_code(instance, code)
+                scope = lens[code]
+            elif scope == "--":
+                lens[code] = self.get_len_by_code(instance, code)
+                scope = lens[code]
+            elif scope.startswith("--"):
+                obj_type = self.get_obj_type(scope[2:])
+                break
+            elif scope.startswith("-"):
+                scope = self[scope[1:]]
+            code += f"[{json.dumps(scope)}]"
+        return code, obj_type
+
+    def get_by_code(self, instance, code: str):
+        program = jq.compile(code, args=self)
+        result = program.input_value(instance).first()
+        return result
+
+    def get_len_by_code(self, instance, code: str) -> int:
+        result = self.get_by_code(instance, code)
+        return len(result) if isinstance(result, list) else 0
+
+    def has_by_code(self, instance, code: str) -> bool:
+        result = self.get_by_code(instance, code)
+        return result is not None
+
+    def set_by_code(self, result, code: str, obj):
+        program = jq.compile(code + f" = {json.dumps(obj)}", args=self)
+        result = program.input_value(result).first()
+        return result
+
+
 @dataclass
 class SchemaLinter(Linter):
     validator: Validator
@@ -222,66 +292,51 @@ class SchemaLinter(Linter):
                 items += [tuple_to_item([[0, 0], [0, 0]])]
         return items
 
-    def get_args(
-        self, id: int, match: dict[str, list[Node]]
-    ) -> dict[str, str]:
-        r"""Get args for jq --args"""
-        args: dict[str, str] = self.query.pattern_settings(id)  # ty:ignore[invalid-assignment]
-        for key, nodes in match.items():
-            if key.startswith("--"):
-                node = nodes[0]
-                args[key[2:]] = self.text_callback(node)
-        return args
+    @staticmethod
+    def process_settings(
+        settings: dict[str, str | None],
+    ) -> tuple[dict[str, str], dict[str, str]]:
+        args: dict[str, str] = {}
+        values: dict[str, str] = {}
+        for key, value in settings.items():
+            if key.startswith("--") and key != "--":
+                args[key[2:]] = value or ""
+            else:
+                values[key] = value or ""
+        return args, values
 
     def instantiate(
         self,
         matches: list[tuple[int, dict[str, list[Node]]]],
         callback: Callable[[Node], Any],
     ):
+        r"""Get a JSON instance for JSON schema validation."""
         instance = {}
         for i, match in matches:
-            args = self.get_args(i, match)
-            lengths = {}
+            # build args
+            args, values = self.process_settings(
+                self.query.pattern_settings(i)
+            )
+            objs = []
             for key, nodes in match.items():
-                if key.startswith("--"):
-                    continue
-                node = nodes[0]
-                code = "."
-                scopes = key.split(".")
-                obj_type = str
-                for scope in scopes:
-                    if scope == "-":
-                        if code not in lengths:
-                            program = jq.compile(code, args=args)
-                            _instance = program.input_value(instance).first()
-                            lengths[code] = (
-                                len(_instance)
-                                if isinstance(_instance, list)
-                                else 0
-                            )
-                        scope = lengths[code]
-                    elif scope.startswith("--"):
-                        match scope[2:]:
-                            case "integer":
-                                obj_type = int
-                            case "number":
-                                obj_type = float
-                            case "string":
-                                obj_type = str
-                            case boolean:
-                                _, *falses = boolean.split("-")
+                for node in nodes:
+                    if key.startswith("--") and key != "--":
+                        args[key[2:]] = self.text_callback(node)
+                    else:
+                        objs += [(key, callback(node))]
+            args = Args(**args)
 
-                                def obj_type(x, falses=falses or ["false"]):
-                                    return x not in falses
-
-                        break
-                    elif scope.startswith("-"):
-                        scope = args[scope[1:]]
-                    code += f"[{json.dumps(scope)}]"
-                obj = callback(node)
+            # keep invariable for each match
+            lens: dict[str, int] = {}
+            for key, obj in objs:
+                code, obj_type = args.parse_key(key, lens, instance)
                 if isinstance(obj, str):
                     obj = obj_type(obj)
-                code += f" = {json.dumps(obj)}"
-                program = jq.compile(code, args=args)
-                instance = program.input_value(instance).first()
+                instance = args.set_by_code(instance, code, obj)
+            for key, obj in values.items():
+                code, obj_type = args.parse_key(key, lens, instance)
+                if args.has_by_code(instance, code):
+                    continue
+                obj = obj_type(obj)
+                instance = args.set_by_code(instance, code, obj)
         return instance
