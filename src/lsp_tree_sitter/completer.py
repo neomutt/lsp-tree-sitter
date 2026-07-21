@@ -5,7 +5,7 @@ r"""Completer
 import json
 import os
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass, field
 from glob import glob
@@ -23,7 +23,13 @@ from lsprotocol.types import (
 )
 from tree_sitter import Node, Point, Tree
 
-from .linter import Linter
+from .node import (
+    NodeOps,
+    NodeRange,
+    NodeText,
+    NodeTuples,
+    PackageSearcher,
+)
 
 
 @dataclass
@@ -57,7 +63,7 @@ class Completer:
         if results == [] or results[0]["documentation"] is None:
             return None
         content = MarkupContent(**results[0]["documentation"])
-        return Hover(content, Linter.tuple_to_range(args["range"]))
+        return Hover(content, NodeRange.from_tuples(args["range"]))
 
     def lookup_help(
         self,
@@ -105,11 +111,9 @@ class Completer:
     def args_callback(node: Node | None, point: Point) -> dict[str, Any]:
         return {
             "type": node.type if node else "",
-            "text": Linter.text_callback(node) if node else "",
+            "text": NodeText(node),
             "cursor": tuple(point),
-            "range": Linter.tuple_callback(node)
-            if node
-            else ((-1, -1), (-1, -1)),
+            "range": NodeTuples(node),
             "complete": False,
             "enums": {
                 "CompletionItemKind": {
@@ -187,9 +191,57 @@ class PathCompleter(Completer):
 
 
 @dataclass
+class PackageCompleter(Completer):
+    """Complete package names."""
+
+    searcher_getter: Callable[[str], PackageSearcher | None]
+
+    def __call__(
+        self, args: dict[str, Any], path: str, node: Node | None = None
+    ) -> list[dict[str, Any]]:
+        searcher = self.searcher_getter(path)
+        if searcher is None or not searcher(node):
+            return []
+        results = []
+        name: str = args["text"].strip()
+        if args["complete"]:
+            for package_name, document in searcher.get_package_names(
+                name
+            ).items():
+                results += [
+                    {
+                        "label": package_name,
+                        "insert_text": package_name,
+                        "kind": CompletionItemKind.Variable,
+                        "documentation": {
+                            "kind": MarkupKind.Markdown,
+                            "value": document,
+                        },
+                    }
+                ]
+        elif not searcher.has_package(name):
+            return []
+        else:
+            document = searcher.get_package_document(name)
+            if document:
+                results += [
+                    {
+                        "label": args["text"],
+                        "insert_text": args["text"],
+                        "kind": CompletionItemKind.Variable,
+                        "documentation": {
+                            "kind": MarkupKind.Markdown,
+                            "value": document,
+                        },
+                    }
+                ]
+        return results
+
+
+@dataclass
 class SchemaCompleter(Completer):
     code: str
-    schema_getter: Callable[[str], dict]
+    schema_getter: Callable[[str], Any]
 
     @classmethod
     def from_files(
@@ -228,6 +280,8 @@ class SchemaCompleter(Completer):
         self, args: dict[str, Any], path: str, node: Node | None = None
     ) -> list[dict[str, Any]]:
         schema = self.schema_getter(path)
+        if schema is None:
+            return []
         return self.query(self.code, args, schema)
 
 
@@ -236,113 +290,11 @@ class ValueCompleter(SchemaCompleter):
     r"""For ``set option value``."""
 
     selectors: tuple[str, ...] = ("-",)
-    regex: re.Pattern = field(
-        default_factory=lambda: re.compile(r"([-+^]|\d+)")
-    )
-
-    @staticmethod
-    def parse_selector(
-        selector: str, node: Node | None, regex: re.Pattern
-    ) -> Node | None:
-        for op in regex.findall(selector):
-            match op:
-                case "^":
-                    node = node.parent if node else None
-                case "+":
-                    node = node.next_sibling if node else None
-                case "-":
-                    node = node.prev_sibling if node else None
-                case x:
-                    node = node.child(int(x)) if node else None
-        return node
 
     def args_callback(self, node: Node | None, point: Point) -> dict[str, Any]:
         args = super().args_callback(node, point)
         args["texts"] = []
         for selector in self.selectors:
-            node = self.parse_selector(selector, node, self.regex)
-            args["texts"] += [Linter.text_callback(node) if node else ""]
+            node = NodeOps.from_str(selector)(node)
+            args["texts"] += [NodeText(node)]
         return args
-
-
-@dataclass
-class PackageSearcher:
-    texts: tuple[str, ...] = ()
-    kind: str = "variable_name"
-    selector: str = "^-"
-
-    def __call__(self, node: Node | None) -> bool:
-        node = ValueCompleter.parse_selector(
-            self.selector, node, ValueCompleter.regex
-        )
-        return not (
-            node is None
-            or node.type != self.kind
-            or Linter.text_callback(node) not in self.texts
-        )
-
-    def get_package_document(self, name: str) -> str | None:
-        raise NotImplementedError
-
-    def get_package_names(self, name: str) -> dict[str, str]:
-        raise NotImplementedError
-
-
-@dataclass
-class PackageCompleter(Completer):
-    """Complete package names."""
-
-    searcher_getter: Callable[[str], PackageSearcher | None]
-
-    @staticmethod
-    def get_filetype(path: str, filetypes: Iterable[str]) -> str | None:
-        basename = os.path.basename(path)
-        for filetype in filetypes:
-            if (
-                basename.endswith("." + filetype[1:])
-                if filetype.startswith("_")
-                else basename == filetype
-            ):
-                return filetype
-
-    def __call__(
-        self, args: dict[str, Any], path: str, node: Node | None = None
-    ) -> list[dict[str, Any]]:
-        searcher = self.searcher_getter(path)
-        if searcher is None:
-            return []
-
-        if not searcher(node):
-            return []
-        results = []
-        name: str = args["text"].strip()
-        if args["complete"]:
-            for package_name, document in searcher.get_package_names(
-                name
-            ).items():
-                results += [
-                    {
-                        "label": package_name,
-                        "insert_text": package_name,
-                        "kind": CompletionItemKind.Variable,
-                        "documentation": {
-                            "kind": MarkupKind.Markdown,
-                            "value": document,
-                        },
-                    }
-                ]
-        else:
-            document = searcher.get_package_document(name)
-            if document:
-                results += [
-                    {
-                        "label": args["text"],
-                        "insert_text": args["text"],
-                        "kind": CompletionItemKind.Variable,
-                        "documentation": {
-                            "kind": MarkupKind.Markdown,
-                            "value": document,
-                        },
-                    }
-                ]
-        return results

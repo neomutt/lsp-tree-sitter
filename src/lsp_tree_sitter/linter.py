@@ -20,10 +20,11 @@ from lsprotocol.types import (
     Diagnostic,
     DiagnosticSeverity,
     DocumentLink,
-    Position,
     Range,
 )
 from tree_sitter import Language, Node, Query, QueryCursor, Tree
+
+from .node import NodeRange, NodeText, NodeTuples, PackageSearcher
 
 
 @dataclass
@@ -60,21 +61,6 @@ class Linter(LinterBase):
         callback: Callable[[Range, str, str, DiagnosticSeverity], Any],
     ) -> list[Any]:
         raise NotImplementedError
-
-    @staticmethod
-    def text_callback(node: Node) -> str:
-        return node.text.decode() if node.text else ""
-
-    @staticmethod
-    def tuple_callback(node: Node) -> tuple[tuple[int, int], tuple[int, int]]:
-        return tuple(node.start_point), tuple(node.end_point)
-
-    @staticmethod
-    def tuple_to_range(tup: tuple[tuple[int, int], tuple[int, int]]) -> Range:
-        return Range(Position(*tup[0]), Position(*tup[1]))
-
-    def range_callback(self, node: Node) -> Range:
-        return self.tuple_to_range(self.tuple_callback(node))
 
     @staticmethod
     def get_diagnose(
@@ -129,22 +115,72 @@ class PathLinter(Linter):
             if label != self.label:
                 continue
             for node in nodes:
-                range = self.range_callback(node)
-                text = self.text_callback(node)
+                text = NodeText(node)
                 if self.expanduser:
                     text = os.path.expanduser(text)
                 if self.expandvars:
                     text = os.path.expandvars(text)
                 filepath = os.path.join(dirname, text)
                 exist = os.path.exists(filepath)
-                if exist if callback != self.get_link else not exist:
-                    continue
                 if callback == self.get_link:
+                    if not exist:
+                        continue
                     path = filepath
                     message = ""
                 else:
+                    if exist:
+                        continue
                     message = "invalid path " + filepath
+                range = NodeRange(node)
                 item = callback(range, message, path, DiagnosticSeverity.Error)
+                items += [item]
+        return items
+
+
+@dataclass
+class PackageLinter(Linter):
+    searcher_getter: Callable[[str], PackageSearcher | None]
+
+    @classmethod
+    def from_queries(
+        cls, language: Language, queries: ModuleType, *args, **kwargs
+    ) -> "PackageLinter":
+        query = cls.queries_to_query(language, queries, "packages.scm")
+        return cls(query, *args, **kwargs)
+
+    def __call__(
+        self,
+        tree: Tree,
+        path: str,
+        callback: Callable[[Range, str, str, DiagnosticSeverity], Any],
+    ) -> list[Any]:
+        searcher = self.searcher_getter(path)
+        if searcher is None:
+            return []
+        captures = self.cursor.captures(tree.root_node)
+        items = []
+        for label, nodes in captures.items():
+            if label != searcher.label:
+                continue
+            for node in nodes:
+                # use label is enough
+                # if not searcher(node):
+                #     continue
+                name = NodeText(node)
+                url = searcher.get_package_url(name)
+                if callback == self.get_link:
+                    if url is None:
+                        continue
+                    path = url
+                    message = ""
+                else:
+                    if url is not None:
+                        continue
+                    message = "unknown package " + name
+                range = NodeRange(node)
+                item = callback(
+                    range, message, path, DiagnosticSeverity.Warning
+                )
                 items += [item]
         return items
 
@@ -220,7 +256,7 @@ class Args(dict[str, str]):
 
 @dataclass
 class SchemaLinter(Linter):
-    validator_getter: Callable[[str], Validator]
+    validator_getter: Callable[[str], Validator | None]
     regex: re.Pattern = field(
         default_factory=lambda: re.compile(r"\('([^']+)' was unexpected\)")
     )
@@ -276,11 +312,13 @@ class SchemaLinter(Linter):
     ) -> list[Any]:
         if callback == self.get_link:
             return []
-        matches = self.cursor.matches(tree.root_node)
-        text_instance = self.instantiate(matches, self.text_callback)
-        tuple_instance = self.instantiate(matches, self.tuple_callback)
-        items = []
         validator = self.validator_getter(path)
+        if validator is None:
+            return []
+        matches = self.cursor.matches(tree.root_node)
+        text_instance = self.instantiate(matches, NodeText)
+        tuple_instance = self.instantiate(matches, NodeTuples)
+        items = []
         for error in validator.iter_errors(text_instance):
             # strip $
             code = error.json_path[1:].replace("'", '"')
@@ -290,7 +328,7 @@ class SchemaLinter(Linter):
             tup = program.input_value(tuple_instance).first()
 
             def tuple_to_item(tup, error=error):
-                range = self.tuple_to_range(tup)
+                range = NodeRange.from_tuples(tup)
                 item = callback(
                     range, error.message, path, DiagnosticSeverity.Error
                 )
@@ -339,7 +377,7 @@ class SchemaLinter(Linter):
             for key, nodes in match.items():
                 for node in nodes:
                     if key.startswith("--") and key != "--":
-                        args[key[2:]] = self.text_callback(node)
+                        args[key[2:]] = NodeText(node)
                     else:
                         objs += [(key, callback(node))]
             args = Args(**args)
