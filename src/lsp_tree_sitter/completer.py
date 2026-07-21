@@ -297,10 +297,12 @@ class PackageCompleter(Completer):
     @staticmethod
     def get_filetype(path: str, filetypes: Iterable[str]) -> str | None:
         basename = os.path.basename(path)
-        extname = os.path.splitext(basename)[-1]
         for filetype in filetypes:
-            name = extname if filetype.startswith("_") else basename
-            if name == filetype:
+            if (
+                basename.endswith("." + filetype[1:])
+                if filetype.startswith("_")
+                else basename == filetype
+            ):
                 return filetype
 
     def __call__(
