@@ -52,7 +52,12 @@ A library to create language servers.
 ## Examples
 
 - [mutt-language-server](https://github.com/neomutt/mutt-language-server)
+  [![github/stars](https://shields.io/github/stars/neomutt/mutt-language-server)](https://github.com/neomutt/mutt-language-server/stargazers)
 - [tmux-language-server](https://github.com/Freed-Wu/tmux-language-server)
+  [![github/stars](https://shields.io/github/stars/Freed-Wu/tmux-language-server)](https://github.com/Freed-Wu/tmux-language-server/stargazers)
 - [zathura-language-server](https://github.com/Freed-Wu/zathura-language-server)
+  [![github/stars](https://shields.io/github/stars/Freed-Wu/zathura-language-server)](https://github.com/Freed-Wu/zathura-language-server/stargazers)
 - [termux-language-server](https://github.com/termux/termux-language-server)
+  [![github/stars](https://shields.io/github/stars/termux/termux-language-server)](https://github.com/termux/termux-language-server/stargazers)
 - [requirements-language-server](https://github.com/Freed-Wu/requirements-language-server)
+  [![github/stars](https://shields.io/github/stars/Freed-Wu/requirements-language-server)](https://github.com/Freed-Wu/requirements-language-server/stargazers)
