@@ -167,14 +167,14 @@ class PackageLinter(Linter):
                 # if not searcher(node):
                 #     continue
                 name = NodeText(node)
-                url = searcher.get_package_url(name)
+                exists = searcher.has_package(name)
                 if callback == self.get_link:
-                    if url is None:
+                    if not exists:
                         continue
-                    path = url
+                    path = searcher.get_package_url(name)
                     message = ""
                 else:
-                    if url is not None:
+                    if exists:
                         continue
                     message = "unknown package " + name
                 range = NodeRange(node)

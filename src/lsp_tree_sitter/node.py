@@ -75,18 +75,20 @@ class NodeFilter:
 @dataclass
 class PackageSearcher(NodeFilter):
     label: str = "package"
-    template: str = "{}"
 
     def has_package(self, name: str) -> bool:
         return self.get_package_document(name) is not None
 
-    def get_package_url(self, name: str) -> str | None:
-        return self.template.format(name) if self.has_package(name) else None
+    def get_package_url(self, name: str) -> str:
+        r"""For textDocument/link"""
+        raise NotImplementedError
 
-    def get_package_document(self, name: str) -> str | None:
+    def get_package_document(self, name: str) -> str:
+        r"""For textDocument/hover"""
         raise NotImplementedError
 
     def get_package_names(self, name: str) -> dict[str, str]:
+        r"""For textDocument/completion"""
         raise NotImplementedError
 
     @staticmethod
