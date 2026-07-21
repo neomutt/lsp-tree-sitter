@@ -49,7 +49,7 @@ class Completer:
                 insert_text=result["insert_text"],
                 kind=result["kind"],
                 documentation=MarkupContent(**result["documentation"])
-                if result.get("documentation", None)
+                if result.get("documentation")
                 else None,
             )
             items += [item]
@@ -101,7 +101,7 @@ class Completer:
                 insert_text=result["insert_text"],
                 kind=result["kind"],
                 documentation=MarkupContent(**result["documentation"])
-                if result.get("documentation", None)
+                if result.get("documentation")
                 else None,
             )
             items += [item]
