@@ -55,3 +55,4 @@ A library to create language servers.
 - [tmux-language-server](https://github.com/Freed-Wu/tmux-language-server)
 - [zathura-language-server](https://github.com/Freed-Wu/zathura-language-server)
 - [termux-language-server](https://github.com/termux/termux-language-server)
+- [requirements-language-server](https://github.com/Freed-Wu/requirements-language-server)
