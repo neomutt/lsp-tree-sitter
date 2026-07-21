@@ -267,7 +267,7 @@ class ValueCompleter(SchemaCompleter):
 
 @dataclass
 class PackageSearcher:
-    texts: tuple[str, ...]
+    texts: tuple[str, ...] = ()
     kind: str = "variable_name"
     selector: str = "^-"
 
