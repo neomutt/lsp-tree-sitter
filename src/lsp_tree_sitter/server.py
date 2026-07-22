@@ -20,6 +20,7 @@ from lsprotocol.types import (
     DocumentLinkParams,
     Hover,
     MarkupContent,
+    MarkupKind,
     PublishDiagnosticsParams,
     TextDocumentPositionParams,
 )
@@ -118,14 +119,34 @@ class TreeSitterLanguageServer(LanguageServer):
             ).items
         return CompletionList(items == [], items)
 
-    def lookup(self, kind: str, *texts: str) -> dict[str, list[MarkupContent]]:
+    def lookup(
+        self,
+        *texts: str,
+        kind: str = "option",
+        path: str = "",
+        complete: bool = False,
+    ) -> dict[str, list[MarkupContent]]:
         contents: dict[str, list[MarkupContent]] = {}
         for text in texts:
             contents[text] = []
             for completer in self.completers:
-                content = completer.lookup_help(kind, text)
-                if content:
-                    contents[text] += [content]
+                if complete:
+                    items = completer.lookup_complete(kind, text, path)
+                    for item in items:
+                        if item.documentation is None:
+                            continue
+                        if isinstance(item.documentation, str):
+                            contents[text] += [
+                                MarkupContent(
+                                    MarkupKind.PlainText, item.documentation
+                                )
+                            ]
+                        else:
+                            contents[text] += [item.documentation]
+                else:
+                    content = completer.lookup_help(kind, text, path)
+                    if content:
+                        contents[text] += [content]
         return contents
 
     def lint(self, *files: str) -> dict[str, list[Diagnostic]]:
@@ -164,7 +185,12 @@ class TreeSitterLanguageServer(LanguageServer):
                 color = False
             case _:
                 color = sys.stdout.isatty()
-        for contents in self.lookup(args.type, *args.lookup).values():
+        for contents in self.lookup(
+            *args.lookup,
+            kind=args.type,
+            path=args.path,
+            complete=args.complete,
+        ).values():
             for content in contents:
                 pprint(content.value, content.kind, color)
         for file, diagnostics in self.lint(*args.check).items():

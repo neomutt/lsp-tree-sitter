@@ -19,6 +19,7 @@ def get_parser(version: str, *args, **kwargs):
         default="auto",
         help="when to display color. default: %(default)s",
     )
+
     parser.add_argument(
         "--lookup",
         nargs="*",
@@ -31,6 +32,17 @@ def get_parser(version: str, *args, **kwargs):
         help="lookup help documentation for which type. default: %(default)s",
     )
     parser.add_argument(
+        "--path",
+        default="",
+        help="lookup help documentation for which file. default: %(default)s",
+    ).complete = shtab.FILE  # type: ignore
+    parser.add_argument(
+        "--complete",
+        action="store_true",
+        help="lookup help documentation for prefix. default: %(default)s",
+    )
+
+    parser.add_argument(
         "--check",
         nargs="*",
         default=(),
@@ -41,6 +53,7 @@ def get_parser(version: str, *args, **kwargs):
         default="{file}:{range}: {severity}: {message}",
         help="error message format. default: %(default)s",
     )
+
     parser.add_argument(
         "--convert",
         nargs="*",

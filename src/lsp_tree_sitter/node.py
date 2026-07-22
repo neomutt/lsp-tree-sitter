@@ -61,7 +61,7 @@ class NodeOps(list[str]):
 class NodeFilter:
     texts: tuple[str, ...] = ()
     kind: str = "variable_name"
-    selector: str = "^-"
+    selector: str = "^--"
 
     def __call__(self, node: Node | None) -> bool:
         node = NodeOps.from_str(self.selector)(node)
