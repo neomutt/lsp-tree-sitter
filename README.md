@@ -61,3 +61,5 @@ A library to create language servers.
   [![github/stars](https://shields.io/github/stars/termux/termux-language-server)](https://github.com/termux/termux-language-server/stargazers)
 - [requirements-language-server](https://github.com/Freed-Wu/requirements-language-server)
   [![github/stars](https://shields.io/github/stars/Freed-Wu/requirements-language-server)](https://github.com/Freed-Wu/requirements-language-server/stargazers)
+- [autotools-language-server](https://github.com/Freed-Wu/autotools-language-server)
+  [![github/stars](https://shields.io/github/stars/Freed-Wu/autotools-language-server)](https://github.com/Freed-Wu/autotools-language-server/stargazers)
