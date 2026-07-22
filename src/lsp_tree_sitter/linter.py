@@ -283,9 +283,9 @@ class SchemaLinter(Linter):
     def from_schema(
         cls, query: Query, schema_getter: Callable[[str], Any]
     ) -> "SchemaLinter":
-        def validator_getter(path: str) -> Validator:
+        def validator_getter(path: str) -> Validator | None:
             schema = schema_getter(path)
-            return validator_for(schema)(schema)
+            return validator_for(schema)(schema) if schema else None
 
         return cls(query, validator_getter)
 
