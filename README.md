@@ -49,6 +49,19 @@ A library to create language servers.
 - [x] [textDocument/hover](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/#textDocument_hover)
 - [x] [textDocument/completion](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/#textDocument_completion)
 
+```mermaid
+graph LR
+  code(source code) --> |tree-sitter| AST --> |jq| json1[JSON with node text]
+  ---> |JSON schema| path[error node JSON path] --> range[error node range]
+  AST --> |jq| json2[JSON with node range] --> range --> |LSP| diagnostic(diagnostic)
+```
+
+```mermaid
+graph LR
+  cursor[/cursor position/] --> node ---> |jq| information --> |LSP| result(completion/hover)
+  code(source code) --> |tree-sitter| AST --> node[cursor node]
+```
+
 ## Examples
 
 - [mutt-language-server](https://github.com/neomutt/mutt-language-server)
