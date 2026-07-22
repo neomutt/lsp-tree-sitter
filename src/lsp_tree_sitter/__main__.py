@@ -17,47 +17,47 @@ def get_parser(version: str, *args, **kwargs):
         "--color",
         choices=["auto", "always", "never"],
         default="auto",
-        help="when to display color, default: %(default)s",
+        help="when to display color. default: %(default)s",
     )
     parser.add_argument(
         "--lookup",
         nargs="*",
         default=(),
-        help="lookup help documentation",
+        help="lookup help documentation. default: %(default)s",
     )
     parser.add_argument(
         "--type",
         default="option",
-        help="lookup help documentation for which type",
+        help="lookup help documentation for which type. default: %(default)s",
     )
     parser.add_argument(
         "--check",
         nargs="*",
         default=(),
-        help="check file's errors and warnings",
+        help="check file's errors and warnings. default: %(default)s",
     ).complete = shtab.FILE  # type: ignore
     parser.add_argument(
         "--message-format",
         default="{file}:{range}: {severity}: {message}",
-        help="error message format",
+        help="error message format. default: %(default)s",
     )
     parser.add_argument(
         "--convert",
         nargs="*",
         default=(),
-        help="convert files to output format",
+        help="convert files to output format. default: %(default)s",
     ).complete = shtab.FILE  # type: ignore
     parser.add_argument(
         "--output-format",
         choices=["json", "yaml", "toml"],
         default="json",
-        help="output format: %(default)s",
+        help="output format. default: %(default)s",
     )
     parser.add_argument(
         "--indent",
         type=int,
         default=2,
-        help="generated json, yaml's indent, ignored by toml: %(default)s",
+        help="indent json, yaml. default: %(default)s",
     )
     return parser
 
