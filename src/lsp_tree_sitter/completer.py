@@ -200,7 +200,8 @@ class PackageCompleter(Completer):
         self, args: dict[str, Any], path: str, node: Node | None = None
     ) -> list[dict[str, Any]]:
         searcher = self.searcher_getter(path)
-        if searcher is None or not searcher(node):
+        # node is None when lookup
+        if searcher is None or (node and not searcher(node)):
             return []
         results = []
         name: str = args["text"].strip()
