@@ -29,6 +29,7 @@ from tree_sitter import Parser, Tree
 
 from .completer import Completer
 from .linter import Linter, SchemaLinter
+from .node import NodeText
 from .utils import pprint
 
 if TYPE_CHECKING:
@@ -149,9 +150,7 @@ class TreeSitterLanguageServer(LanguageServer):
                 if not isinstance(linter, SchemaLinter):
                     continue
                 matches = linter.cursor.matches(tree.root_node)
-                instances[file] += [
-                    linter.instantiate(matches, linter.text_callback)
-                ]
+                instances[file] += [linter.instantiate(matches, NodeText)]
         return instances
 
     def run(self, args: "Namespace") -> None:
