@@ -67,8 +67,8 @@ class Completer:
         **kwargs,
     ) -> MarkupContent | None:
         args = self.args_callback(None, Point(-1, -1))
-        args["nodes"][0].type = type
-        args["nodes"][0].text = text
+        args["nodes"][0]["type"] = type
+        args["nodes"][0]["text"] = text
         args.update(kwargs)
         results = self(args, path)
         if results == [] or results[0]["documentation"] is None:
@@ -83,8 +83,8 @@ class Completer:
         **kwargs,
     ) -> list[CompletionItem]:
         args = self.args_callback(None, Point(-1, -1))
-        args["nodes"][0].type = type
-        args["nodes"][0].text = text
+        args["nodes"][0]["type"] = type
+        args["nodes"][0]["text"] = text
         args["complete"] = True
         args.update(kwargs)
         results = self(args, path)
