@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from lsprotocol.types import (
     TEXT_DOCUMENT_COMPLETION,
     TEXT_DOCUMENT_DID_CHANGE,
+    TEXT_DOCUMENT_DID_CLOSE,
     TEXT_DOCUMENT_DID_OPEN,
     TEXT_DOCUMENT_DOCUMENT_LINK,
     TEXT_DOCUMENT_HOVER,
@@ -17,6 +18,8 @@ from lsprotocol.types import (
     Diagnostic,
     DiagnosticSeverity,
     DidChangeTextDocumentParams,
+    DidCloseTextDocumentParams,
+    DidOpenTextDocumentParams,
     DocumentLink,
     DocumentLinkParams,
     Hover,
@@ -25,10 +28,12 @@ from lsprotocol.types import (
     MarkupContent,
     MarkupKind,
     PublishDiagnosticsParams,
+    TextDocumentContentChangePartial,
     TextDocumentPositionParams,
 )
 from pygls.lsp.server import LanguageServer
 from pygls.uris import to_fs_path
+from pygls.workspace import ServerTextPosition, TextDocument
 from tree_sitter import Parser, Tree
 
 from .completer import Completer
@@ -38,6 +43,64 @@ from .utils import pprint
 
 if TYPE_CHECKING:
     from argparse import Namespace
+
+
+class TreeSitterTextDocument(TextDocument):
+    def position_to_byte_offset(
+        self, position: ServerTextPosition
+    ) -> tuple[int, int]:
+        r"""Convert a (line, col) position to a byte offset and byte column.
+
+        ``line`` and ``col`` are zero-based and given in UTF-32 code points
+        (Python characters), as returned by pygls' ``PositionCodec``.
+        Returns ``(byte_offset, byte_col)`` where ``byte_col`` is the number
+        of UTF-8 bytes from the start of ``line`` to ``col``.
+        """
+        # index out of length
+        lines = self.source.encode().split(b"\n")
+        line_start = sum(
+            len(lines[i]) + 1 for i in range(min(position.line, len(lines)))
+        )
+        if position.line >= len(lines):
+            return line_start, 0
+        line_str = lines[position.line].decode()
+        byte_col = len(
+            line_str[: min(position.character, len(line_str))].encode()
+        )
+        return line_start + byte_col, byte_col
+
+    def compute_tree_edit(
+        self, change: TextDocumentContentChangePartial
+    ) -> dict:
+        r"""
+        Compute ``Tree.edit()`` kwargs from a LSP incremental content change.
+        """
+        lines = self.source.splitlines(True)
+        range = self.position_codec.range_from_client_units(
+            lines, change.range
+        )
+
+        start_byte, start_bcol = self.position_to_byte_offset(range.start)
+        old_end_byte, old_end_bcol = self.position_to_byte_offset(range.end)
+
+        bytes_len = len(change.text.encode())
+        new_text_lines = change.text.split("\n")
+
+        new_end_byte = start_byte + bytes_len
+        new_end_line = range.start.line + len(new_text_lines) - 1
+        if len(new_text_lines) == 1:
+            new_end_bcol = start_bcol + bytes_len
+        else:
+            new_end_bcol = len(new_text_lines[-1].encode())
+
+        return dict(
+            start_byte=start_byte,
+            old_end_byte=old_end_byte,
+            new_end_byte=new_end_byte,
+            start_point=(range.start.line, start_bcol),
+            old_end_point=(range.end.line, old_end_bcol),
+            new_end_point=(new_end_line, new_end_bcol),
+        )
 
 
 class TreeSitterLanguageServer(LanguageServer):
@@ -63,13 +126,48 @@ class TreeSitterLanguageServer(LanguageServer):
         self.trees: dict[str, Tree] = {}
 
         @self.feature(TEXT_DOCUMENT_DID_OPEN)
+        def _(params: DidOpenTextDocumentParams) -> None:
+            uri = params.text_document.uri
+            source = params.text_document.text.encode()
+            self.trees[uri] = self.parser.parse(source)
+            self.diagnose(params)
+
+        @self.feature(TEXT_DOCUMENT_DID_CLOSE)
+        def _(params: DidCloseTextDocumentParams) -> None:
+            uri = params.text_document.uri
+            if uri in self.trees:
+                del self.trees[uri]
+
         @self.feature(TEXT_DOCUMENT_DID_CHANGE)
         def _(params: DidChangeTextDocumentParams) -> None:
-            doc = self.workspace.get_text_document(params.text_document.uri)
+            if len(params.content_changes) == 0:
+                return
+            uri = params.text_document.uri
+            tree = self.trees.get(uri)
+            if tree is None:
+                doc = self.workspace.get_text_document(uri)
+            else:
+                doc = TreeSitterTextDocument(uri, NodeText(tree.root_node))
+
+                for change in params.content_changes:
+                    if not isinstance(
+                        change, TextDocumentContentChangePartial
+                    ):
+                        tree = None
+                        doc = TextDocument(uri, change.text)
+                        break
+                    edit = doc.compute_tree_edit(change)
+                    tree.edit(**edit)
+                    doc.apply_change(change)
             source = doc.source.encode()
-            # TODO: incremental parsing
-            tree = self.parser.parse(source)
-            self.trees[doc.uri] = tree
+
+            # TypeError: parse() argument 2 must be tree_sitter.Tree, not Non
+            tree = (
+                self.parser.parse(source, old_tree=tree)
+                if tree
+                else self.parser.parse(source)
+            )
+            self.trees[uri] = tree
             self.diagnose(params)
 
         @self.feature(TEXT_DOCUMENT_DOCUMENT_LINK)
@@ -88,49 +186,52 @@ class TreeSitterLanguageServer(LanguageServer):
         def completions(params: CompletionParams) -> CompletionList:
             return self.complete(params)
 
-    def diagnose(self, params: DidChangeTextDocumentParams) -> None:
-        doc = self.workspace.get_text_document(params.text_document.uri)
-        tree = self.trees[doc.uri]
+    def diagnose(
+        self,
+        params: DidOpenTextDocumentParams | DidChangeTextDocumentParams,
+    ) -> None:
+        uri = params.text_document.uri
+        tree = self.trees[uri]
         diagnostics = []
         for linter in self.linters:
-            diagnostics += linter.diagnose(tree, to_fs_path(doc.uri) or "")
+            diagnostics += linter.diagnose(tree, to_fs_path(uri) or "")
         self.text_document_publish_diagnostics(
-            PublishDiagnosticsParams(doc.uri, diagnostics)
+            PublishDiagnosticsParams(uri, diagnostics)
         )
 
     def link(self, params: DocumentLinkParams) -> list[DocumentLink]:
-        doc = self.workspace.get_text_document(params.text_document.uri)
-        tree = self.trees[doc.uri]
+        uri = params.text_document.uri
+        tree = self.trees[uri]
         links = []
         for linter in self.linters:
-            links += linter.link(tree, to_fs_path(doc.uri) or "")
+            links += linter.link(tree, to_fs_path(uri) or "")
         return links
 
     def hint(self, params: InlayHintParams) -> list[InlayHint]:
-        doc = self.workspace.get_text_document(params.text_document.uri)
-        tree = self.trees[doc.uri]
+        uri = params.text_document.uri
+        tree = self.trees[uri]
         hints = []
         for linter in self.linters:
-            hints += linter.hint(tree, to_fs_path(doc.uri) or "")
+            hints += linter.hint(tree, to_fs_path(uri) or "")
         return hints
 
     def hover(self, params: TextDocumentPositionParams) -> Hover | None:
-        doc = self.workspace.get_text_document(params.text_document.uri)
-        tree = self.trees[doc.uri]
+        uri = params.text_document.uri
+        tree = self.trees[uri]
         for completer in self.completers:
             result = completer.hover(
-                tree, params.position, to_fs_path(doc.uri) or ""
+                tree, params.position, to_fs_path(uri) or ""
             )
             if result:
                 return result
 
     def complete(self, params: CompletionParams) -> CompletionList:
-        doc = self.workspace.get_text_document(params.text_document.uri)
-        tree = self.trees[doc.uri]
+        uri = params.text_document.uri
+        tree = self.trees[uri]
         items = []
         for completer in self.completers:
             items += completer.complete(
-                tree, params.position, to_fs_path(doc.uri) or ""
+                tree, params.position, to_fs_path(uri) or ""
             ).items
         return CompletionList(items == [], items)
 
