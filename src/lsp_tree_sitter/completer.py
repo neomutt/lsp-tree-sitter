@@ -188,15 +188,6 @@ class PackageCompleter(Completer):
 
     searcher_getter: Callable[[str], PackageSearcher | None]
 
-    @staticmethod
-    def get_package_name(name: str) -> str:
-        r"""Get the package name from the text.
-        e.g. "package>=0.0.1" -> "package".
-        """
-        for sep in ":><=!":
-            name = name.partition(sep)[0]
-        return name.strip()
-
     def __call__(
         self, args: dict[str, Any], path: str, node: Node | None = None
     ) -> list[dict[str, Any]]:
@@ -206,7 +197,7 @@ class PackageCompleter(Completer):
             return []
         results = []
         name: str = args["nodes"][0]["text"]
-        name = self.get_package_name(name)
+        name = searcher.get_package_name(name)
         if args["complete"]:
             for package_name, document in searcher.get_package_names(
                 name

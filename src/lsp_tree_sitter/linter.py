@@ -202,6 +202,7 @@ class PackageLinter(Linter):
                 # if not searcher(node):
                 #     continue
                 name = NodeText(node)
+                name = searcher.get_package_name(name)
                 exists = searcher.has_package(name)
                 if callback == self.get_diagnose:
                     if exists:

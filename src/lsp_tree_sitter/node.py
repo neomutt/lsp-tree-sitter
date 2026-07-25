@@ -6,6 +6,7 @@ import os
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass
+from shlex import split
 
 from lsprotocol.types import Position, Range
 from tree_sitter import Node
@@ -116,3 +117,13 @@ class PackageSearcher(NodeFilter):
             ):
                 return filetype
         return ""
+
+    @staticmethod
+    def get_package_name(name: str) -> str:
+        r"""Get the package name from the text.
+        e.g. "package>=0.0.1" -> "package".
+        """
+        name = split(name)[0]
+        for sep in ":><=!":
+            name = name.partition(sep)[0]
+        return name.strip()
