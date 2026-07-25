@@ -8,6 +8,7 @@ import json
 import os
 import re
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass, field
 from shlex import split
 from types import ModuleType
@@ -430,7 +431,8 @@ class SchemaLinter(Linter):
             for key, obj in objs:
                 code, obj_type = args.parse_key(key, lens, instance)
                 if isinstance(obj, str):
-                    obj = obj_type(obj)
+                    with suppress(ValueError):
+                        obj = obj_type(obj)
                 instance = args.set_by_code(instance, code, obj)
             for key, obj in values.items():
                 code, obj_type = args.parse_key(key, lens, instance)
