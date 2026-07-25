@@ -27,6 +27,16 @@ class NodeTuples(tuple[tuple[int, int], tuple[int, int]]):
         return tuple(node.start_point), tuple(node.end_point)
 
 
+class NodeDict(dict):
+    @classmethod
+    def from_node(cls, node: Node | None) -> dict:
+        return {
+            "type": node.type if node else "",
+            "text": NodeText(node),
+            "range": NodeTuples(node),
+        }
+
+
 class NodeRange:
     def __new__(cls, node: Node) -> Range:
         return cls.from_tuples(NodeTuples(node))

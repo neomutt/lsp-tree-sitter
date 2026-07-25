@@ -23,13 +23,7 @@ from lsprotocol.types import (
 )
 from tree_sitter import Node, Point, Tree
 
-from .node import (
-    NodeOps,
-    NodeRange,
-    NodeText,
-    NodeTuples,
-    PackageSearcher,
-)
+from .node import NodeDict, NodeOps, NodeRange, PackageSearcher
 
 
 @dataclass
@@ -73,8 +67,8 @@ class Completer:
         **kwargs,
     ) -> MarkupContent | None:
         args = self.args_callback(None, Point(-1, -1))
-        args["type"] = type
-        args["text"] = text
+        args["nodes"][0].type = type
+        args["nodes"][0].text = text
         args.update(kwargs)
         results = self(args, path)
         if results == [] or results[0]["documentation"] is None:
@@ -89,8 +83,8 @@ class Completer:
         **kwargs,
     ) -> list[CompletionItem]:
         args = self.args_callback(None, Point(-1, -1))
-        args["type"] = type
-        args["text"] = text
+        args["nodes"][0].type = type
+        args["nodes"][0].text = text
         args["complete"] = True
         args.update(kwargs)
         results = self(args, path)
@@ -110,10 +104,8 @@ class Completer:
     @staticmethod
     def args_callback(node: Node | None, point: Point) -> dict[str, Any]:
         return {
-            "type": node.type if node else "",
-            "text": NodeText(node),
+            "nodes": [NodeDict.from_node(node)],
             "cursor": tuple(point),
-            "range": NodeTuples(node),
             "complete": False,
             "enums": {
                 "CompletionItemKind": {
@@ -144,16 +136,16 @@ class PathCompleter(Completer):
     def __call__(
         self, args: dict[str, Any], path: str, node: Node | None = None
     ) -> list[dict[str, Any]]:
-        if args["type"] != self.kind:
+        if args["nodes"][0]["type"] != self.kind:
             return []
         root_dir = os.path.dirname(path)
         results = []
         for expr, filetype in self.filetypes.items():
             for filename in glob(expr, root_dir=root_dir, recursive=True):
                 if not (
-                    filename.startswith(args["text"])
+                    filename.startswith(args["nodes"][0]["text"])
                     if args["complete"]
-                    else filename == args["text"]
+                    else filename == args["nodes"][0]["text"]
                 ):
                     continue
                 filepath = os.path.join(root_dir, filename)
@@ -196,6 +188,15 @@ class PackageCompleter(Completer):
 
     searcher_getter: Callable[[str], PackageSearcher | None]
 
+    @staticmethod
+    def get_package_name(name: str) -> str:
+        r"""Get the package name from the text.
+        e.g. "package>=0.0.1" -> "package".
+        """
+        for sep in ":><=!":
+            name = name.partition(sep)[0]
+        return name.strip()
+
     def __call__(
         self, args: dict[str, Any], path: str, node: Node | None = None
     ) -> list[dict[str, Any]]:
@@ -204,7 +205,8 @@ class PackageCompleter(Completer):
         if searcher is None or (node and not searcher(node)):
             return []
         results = []
-        name: str = args["text"].strip()
+        name: str = args["nodes"][0]["text"]
+        name = self.get_package_name(name)
         if args["complete"]:
             for package_name, document in searcher.get_package_names(
                 name
@@ -294,8 +296,7 @@ class ValueCompleter(SchemaCompleter):
 
     def args_callback(self, node: Node | None, point: Point) -> dict[str, Any]:
         args = super().args_callback(node, point)
-        args["texts"] = []
         for selector in self.selectors:
             node = NodeOps.from_str(selector)(node)
-            args["texts"] += [NodeText(node)]
+            args["nodes"] += [NodeDict.from_node(node)]
         return args
