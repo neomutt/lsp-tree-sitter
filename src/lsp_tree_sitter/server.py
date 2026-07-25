@@ -190,9 +190,6 @@ class TreeSitterLanguageServer(LanguageServer):
         return instances
 
     def run(self, args: "Namespace") -> None:
-        if not (args.lookup or args.check or args.convert):
-            self.start_io()
-            return
         match args.color:
             case "always":
                 color = True
@@ -223,3 +220,10 @@ class TreeSitterLanguageServer(LanguageServer):
         for instances in self.instantiate(*args.convert).values():
             for instance in instances:
                 pprint(instance, args.output_format, color, indent=args.indent)
+
+        if args.tcp:
+            self.start_tcp(args.host, args.port)
+        elif args.ws:
+            self.start_ws(args.host, args.port)
+        if not (args.lookup or args.check or args.convert):
+            self.start_io()

@@ -72,12 +72,35 @@ def get_parser(version: str, *args, **kwargs):
         default=2,
         help="indent json, yaml. default: %(default)s",
     )
+
+    # from pygls.cls import start_server
+    parser.add_argument(
+        "--tcp",
+        action="store_true",
+        help="start a TCP server. default: %(default)s",
+    )
+    parser.add_argument(
+        "--ws",
+        action="store_true",
+        help="start a WebSocket server. default: %(default)s",
+    )
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="bind to this address. default: %(default)s",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8888,
+        help="bind to this port. default: %(default)s",
+    )
+
     return parser
 
 
 def main():
     parser = get_parser(__version__)
-    parser.add_argument("--version", version=__version__, action="version")
     args = parser.parse_args()
 
     r"""
