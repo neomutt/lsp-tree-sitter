@@ -20,6 +20,8 @@ from lsprotocol.types import (
     Diagnostic,
     DiagnosticSeverity,
     DocumentLink,
+    InlayHint,
+    InlayHintKind,
     Range,
 )
 from tree_sitter import Language, Node, Query, QueryCursor, Tree
@@ -30,10 +32,13 @@ from .node import NodeRange, NodeText, NodeTuples, PackageSearcher
 @dataclass
 class LinterBase:
     def diagnose(self, tree: Tree, path: str) -> list[Diagnostic]:
-        raise NotImplementedError
+        return []
 
     def link(self, tree: Tree, path: str) -> list[DocumentLink]:
-        raise NotImplementedError
+        return []
+
+    def hint(self, tree: Tree, path: str) -> list[InlayHint]:
+        return []
 
 
 @dataclass
@@ -86,6 +91,34 @@ class Linter(LinterBase):
     def link(self, tree: Tree, path: str) -> list[DocumentLink]:
         return self(tree, path, self.get_link)
 
+    @staticmethod
+    def get_hint(
+        range: Range,
+        message: str,
+        path: str,
+        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+    ) -> InlayHint:
+        try:
+            kind = InlayHintKind(severity)
+        except ValueError:
+            kind = None
+        if path:
+            position = range.end
+            padding_left = True
+        else:
+            position = range.start
+            padding_left = False
+        return InlayHint(
+            position,
+            message,
+            kind,
+            padding_left=padding_left,
+            padding_right=not padding_left,
+        )
+
+    def hint(self, tree: Tree, path: str) -> list[InlayHint]:
+        return self(tree, path, self.get_hint)
+
 
 @dataclass
 class PathLinter(Linter):
@@ -122,15 +155,17 @@ class PathLinter(Linter):
                     text = os.path.expandvars(text)
                 filepath = os.path.join(dirname, text)
                 exist = os.path.exists(filepath)
-                if callback == self.get_link:
+                if callback == self.get_diagnose:
+                    if exist:
+                        continue
+                    message = "invalid path " + filepath
+                elif callback == self.get_link:
                     if not exist:
                         continue
                     path = filepath
                     message = ""
                 else:
-                    if exist:
-                        continue
-                    message = "invalid path " + filepath
+                    continue
                 range = NodeRange(node)
                 item = callback(range, message, path, DiagnosticSeverity.Error)
                 items += [item]
@@ -168,15 +203,22 @@ class PackageLinter(Linter):
                 #     continue
                 name = NodeText(node)
                 exists = searcher.has_package(name)
-                if callback == self.get_link:
+                if callback == self.get_diagnose:
+                    if exists:
+                        continue
+                    message = "unknown package " + name
+                elif callback == self.get_link:
                     if not exists:
                         continue
                     path = searcher.get_package_url(name)
                     message = ""
                 else:
-                    if exists:
+                    if not exists:
                         continue
-                    message = "unknown package " + name
+                    message = searcher.get_package_version(name)
+                    # not installed
+                    if message == "":
+                        continue
                 range = NodeRange(node)
                 item = callback(
                     range, message, path, DiagnosticSeverity.Warning
@@ -310,7 +352,7 @@ class SchemaLinter(Linter):
         path: str,
         callback: Callable[[Range, str, str, DiagnosticSeverity], Any],
     ) -> list[Any]:
-        if callback == self.get_link:
+        if callback != self.get_diagnose:
             return []
         validator = self.validator_getter(path)
         if validator is None:

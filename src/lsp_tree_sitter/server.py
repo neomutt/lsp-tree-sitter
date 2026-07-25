@@ -11,6 +11,7 @@ from lsprotocol.types import (
     TEXT_DOCUMENT_DID_OPEN,
     TEXT_DOCUMENT_DOCUMENT_LINK,
     TEXT_DOCUMENT_HOVER,
+    TEXT_DOCUMENT_INLAY_HINT,
     CompletionList,
     CompletionParams,
     Diagnostic,
@@ -19,6 +20,8 @@ from lsprotocol.types import (
     DocumentLink,
     DocumentLinkParams,
     Hover,
+    InlayHint,
+    InlayHintParams,
     MarkupContent,
     MarkupKind,
     PublishDiagnosticsParams,
@@ -73,6 +76,10 @@ class TreeSitterLanguageServer(LanguageServer):
         def _(params: DocumentLinkParams) -> list[DocumentLink]:
             return self.link(params)
 
+        @self.feature(TEXT_DOCUMENT_INLAY_HINT)
+        def _(params: InlayHintParams) -> list[InlayHint]:
+            return self.hint(params)
+
         @self.feature(TEXT_DOCUMENT_HOVER)
         def _(params: TextDocumentPositionParams) -> Hover | None:
             return self.hover(params)
@@ -98,6 +105,14 @@ class TreeSitterLanguageServer(LanguageServer):
         for linter in self.linters:
             links += linter.link(tree, to_fs_path(doc.uri) or "")
         return links
+
+    def hint(self, params: InlayHintParams) -> list[InlayHint]:
+        doc = self.workspace.get_text_document(params.text_document.uri)
+        tree = self.trees[doc.uri]
+        hints = []
+        for linter in self.linters:
+            hints += linter.hint(tree, to_fs_path(doc.uri) or "")
+        return hints
 
     def hover(self, params: TextDocumentPositionParams) -> Hover | None:
         doc = self.workspace.get_text_document(params.text_document.uri)

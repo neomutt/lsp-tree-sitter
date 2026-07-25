@@ -77,10 +77,14 @@ class PackageSearcher(NodeFilter):
     label: str = "package"
 
     def has_package(self, name: str) -> bool:
-        return self.get_package_document(name) is not None
+        raise NotImplementedError
 
     def get_package_url(self, name: str) -> str:
         r"""For textDocument/link"""
+        raise NotImplementedError
+
+    def get_package_version(self, name: str) -> str:
+        r"""For textDocument/inlayHint"""
         raise NotImplementedError
 
     def get_package_document(self, name: str) -> str:
