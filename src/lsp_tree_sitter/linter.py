@@ -21,9 +21,11 @@ from lsprotocol.types import (
     Diagnostic,
     DiagnosticSeverity,
     DocumentLink,
+    DocumentSymbol,
     InlayHint,
     InlayHintKind,
     Range,
+    SymbolKind,
 )
 from tree_sitter import Language, Node, Query, QueryCursor, Tree
 
@@ -39,6 +41,9 @@ class LinterBase:
         return []
 
     def hint(self, tree: Tree, path: str) -> list[InlayHint]:
+        return []
+
+    def symbol(self, tree: Tree, path: str) -> list[DocumentSymbol]:
         return []
 
 
@@ -64,7 +69,7 @@ class Linter(LinterBase):
         self,
         tree: Tree,
         path: str,
-        callback: Callable[[Range, str, str, DiagnosticSeverity], Any],
+        callback: Callable[[Range, str, str, int], Any],
     ) -> list[Any]:
         raise NotImplementedError
 
@@ -73,8 +78,9 @@ class Linter(LinterBase):
         range: Range,
         message: str,
         path: str,
-        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+        severity: int = DiagnosticSeverity.Error,
     ) -> Diagnostic:
+        severity = DiagnosticSeverity(severity)
         return Diagnostic(range, message, severity)
 
     def diagnose(self, tree: Tree, path: str) -> list[Diagnostic]:
@@ -85,7 +91,7 @@ class Linter(LinterBase):
         range: Range,
         message: str,
         path: str,
-        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+        severity: int = DiagnosticSeverity.Error,
     ) -> DocumentLink:
         return DocumentLink(range, path, message if message else None)
 
@@ -97,7 +103,7 @@ class Linter(LinterBase):
         range: Range,
         message: str,
         path: str,
-        severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+        severity: int = DiagnosticSeverity.Error,
     ) -> InlayHint:
         try:
             kind = InlayHintKind(severity)
@@ -120,6 +126,24 @@ class Linter(LinterBase):
     def hint(self, tree: Tree, path: str) -> list[InlayHint]:
         return self(tree, path, self.get_hint)
 
+    @staticmethod
+    def get_symbol(
+        range: Range,
+        message: str,
+        path: str,
+        severity: int = DiagnosticSeverity.Error,
+    ) -> DocumentSymbol:
+        kind = SymbolKind(severity)
+        return DocumentSymbol(
+            message,
+            kind,
+            range,
+            range,
+        )
+
+    def symbol(self, tree: Tree, path: str) -> list[DocumentSymbol]:
+        return self(tree, path, self.get_symbol)
+
 
 @dataclass
 class PathLinter(Linter):
@@ -140,7 +164,7 @@ class PathLinter(Linter):
         self,
         tree: Tree,
         path: str,
-        callback: Callable[[Range, str, str, DiagnosticSeverity], Any],
+        callback: Callable[[Range, str, str, int], Any],
     ) -> list[Any]:
         captures = self.cursor.captures(tree.root_node)
         items = []
@@ -214,13 +238,15 @@ class PackageLinter(Linter):
                         continue
                     path = searcher.get_package_url(name)
                     message = ""
-                else:
+                elif callback == self.get_hint:
                     if not exists:
                         continue
                     message = searcher.get_package_version(name)
                     # not installed
                     if message == "":
                         continue
+                else:
+                    continue
                 range = NodeRange(node)
                 item = callback(
                     range, message, path, DiagnosticSeverity.Warning

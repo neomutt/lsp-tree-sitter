@@ -11,6 +11,7 @@ from lsprotocol.types import (
     TEXT_DOCUMENT_DID_CLOSE,
     TEXT_DOCUMENT_DID_OPEN,
     TEXT_DOCUMENT_DOCUMENT_LINK,
+    TEXT_DOCUMENT_DOCUMENT_SYMBOL,
     TEXT_DOCUMENT_HOVER,
     TEXT_DOCUMENT_INLAY_HINT,
     CompletionList,
@@ -22,6 +23,8 @@ from lsprotocol.types import (
     DidOpenTextDocumentParams,
     DocumentLink,
     DocumentLinkParams,
+    DocumentSymbol,
+    DocumentSymbolParams,
     Hover,
     InlayHint,
     InlayHintParams,
@@ -178,6 +181,10 @@ class TreeSitterLanguageServer(LanguageServer):
         def _(params: InlayHintParams) -> list[InlayHint]:
             return self.hint(params)
 
+        @self.feature(TEXT_DOCUMENT_DOCUMENT_SYMBOL)
+        def _(params: DocumentSymbolParams) -> list[DocumentSymbol]:
+            return self.symbol(params)
+
         @self.feature(TEXT_DOCUMENT_HOVER)
         def _(params: TextDocumentPositionParams) -> Hover | None:
             return self.hover(params)
@@ -214,6 +221,14 @@ class TreeSitterLanguageServer(LanguageServer):
         for linter in self.linters:
             hints += linter.hint(tree, to_fs_path(uri) or "")
         return hints
+
+    def symbol(self, params: DocumentSymbolParams) -> list[DocumentSymbol]:
+        uri = params.text_document.uri
+        tree = self.trees[uri]
+        symbols = []
+        for linter in self.linters:
+            symbols += linter.symbol(tree, to_fs_path(uri) or "")
+        return symbols
 
     def hover(self, params: TextDocumentPositionParams) -> Hover | None:
         uri = params.text_document.uri
