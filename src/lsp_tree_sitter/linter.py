@@ -409,14 +409,40 @@ class SchemaLinter(Linter):
             elif isinstance(tup, list) and all(
                 self.tuple_is_range(child) for child in tup
             ):
-                for child in tup:
-                    items += [tuple_to_item(child)]
+                # https://github.com/python-jsonschema/jsonschema/issues/1363
+                if error.message.endswith(" has non-unique elements"):
+                    texts: list[str] = program.input_value(
+                        text_instance
+                    ).first()
+                    for i in self.get_duplications(texts):
+                        items += [tuple_to_item(tup[i])]
+                else:
+                    for child in tup:
+                        items += [tuple_to_item(child)]
             elif isinstance(tup, dict):
-                for key in self.regex.findall(error.message):
-                    items += [tuple_to_item(tup[key])]
+                # https://github.com/python-jsonschema/jsonschema/issues/119
+                if error.message.endswith(" was unexpected"):
+                    for key in self.regex.findall(error.message):
+                        items += [tuple_to_item(tup[key])]
+                else:
+                    for child in tup.values():
+                        items += [tuple_to_item(child)]
             else:
                 items += [tuple_to_item([[0, 0], [0, 0]])]
         return items
+
+    @staticmethod
+    def get_duplications(arr: list) -> list[int]:
+        seen = {}
+        duplicates = set()
+
+        for i, val in enumerate(arr):
+            if val in seen:
+                duplicates.add(val)
+            else:
+                seen[val] = i
+
+        return [i for i, val in enumerate(arr) if val in duplicates]
 
     @staticmethod
     def process_settings(
