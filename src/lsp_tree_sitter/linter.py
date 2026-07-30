@@ -424,6 +424,8 @@ class SchemaLinter(Linter):
                 if error.message.endswith(" was unexpected"):
                     for key in self.regex.findall(error.message):
                         items += [tuple_to_item(tup[key])]
+                elif error.message.endswith(" is a required property"):
+                    items += [tuple_to_item(tup[0])]
                 else:
                     for child in tup.values():
                         items += [tuple_to_item(child)]
