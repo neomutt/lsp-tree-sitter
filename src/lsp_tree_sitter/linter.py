@@ -23,9 +23,6 @@ from lsprotocol.types import (
     DocumentLink,
     DocumentSymbol,
     InlayHint,
-    InlayHintKind,
-    Range,
-    SymbolKind,
 )
 from tree_sitter import Language, Node, Query, QueryCursor, Tree
 
@@ -69,80 +66,21 @@ class Linter(LinterBase):
         self,
         tree: Tree,
         path: str,
-        callback: Callable[[Range, str, str, int], Any],
+        cls: type,
     ) -> list[Any]:
         raise NotImplementedError
 
-    @staticmethod
-    def get_diagnose(
-        range: Range,
-        message: str,
-        path: str,
-        severity: int = DiagnosticSeverity.Error,
-    ) -> Diagnostic:
-        severity = DiagnosticSeverity(severity)
-        return Diagnostic(range, message, severity)
-
     def diagnose(self, tree: Tree, path: str) -> list[Diagnostic]:
-        return self(tree, path, self.get_diagnose)
-
-    @staticmethod
-    def get_link(
-        range: Range,
-        message: str,
-        path: str,
-        severity: int = DiagnosticSeverity.Error,
-    ) -> DocumentLink:
-        return DocumentLink(range, path, message if message else None)
+        return self(tree, path, Diagnostic)
 
     def link(self, tree: Tree, path: str) -> list[DocumentLink]:
-        return self(tree, path, self.get_link)
-
-    @staticmethod
-    def get_hint(
-        range: Range,
-        message: str,
-        path: str,
-        severity: int = DiagnosticSeverity.Error,
-    ) -> InlayHint:
-        try:
-            kind = InlayHintKind(severity)
-        except ValueError:
-            kind = None
-        if path:
-            position = range.end
-            padding_left = True
-        else:
-            position = range.start
-            padding_left = False
-        return InlayHint(
-            position,
-            message,
-            kind,
-            padding_left=padding_left,
-            padding_right=not padding_left,
-        )
+        return self(tree, path, DocumentLink)
 
     def hint(self, tree: Tree, path: str) -> list[InlayHint]:
-        return self(tree, path, self.get_hint)
-
-    @staticmethod
-    def get_symbol(
-        range: Range,
-        message: str,
-        path: str,
-        severity: int = DiagnosticSeverity.Error,
-    ) -> DocumentSymbol:
-        kind = SymbolKind(severity)
-        return DocumentSymbol(
-            message,
-            kind,
-            range,
-            range,
-        )
+        return self(tree, path, InlayHint)
 
     def symbol(self, tree: Tree, path: str) -> list[DocumentSymbol]:
-        return self(tree, path, self.get_symbol)
+        return self(tree, path, DocumentSymbol)
 
 
 @dataclass
@@ -164,7 +102,7 @@ class PathLinter(Linter):
         self,
         tree: Tree,
         path: str,
-        callback: Callable[[Range, str, str, int], Any],
+        cls: type,
     ) -> list[Any]:
         captures = self.cursor.captures(tree.root_node)
         items = []
@@ -180,19 +118,21 @@ class PathLinter(Linter):
                     text = os.path.expandvars(text)
                 filepath = os.path.join(dirname, text)
                 exist = os.path.exists(filepath)
-                if callback == self.get_diagnose:
+                range = NodeRange(node)
+                if cls == Diagnostic:
                     if exist:
                         continue
-                    message = "invalid path " + filepath
-                elif callback == self.get_link:
+                    item = Diagnostic(
+                        range,
+                        "invalid path " + filepath,
+                        DiagnosticSeverity.Error,
+                    )
+                elif cls == DocumentLink:
                     if not exist:
                         continue
-                    path = filepath
-                    message = ""
+                    item = DocumentLink(range, filepath)
                 else:
                     continue
-                range = NodeRange(node)
-                item = callback(range, message, path, DiagnosticSeverity.Error)
                 items += [item]
         return items
 
@@ -212,7 +152,7 @@ class PackageLinter(Linter):
         self,
         tree: Tree,
         path: str,
-        callback: Callable[[Range, str, str, DiagnosticSeverity], Any],
+        cls: type,
     ) -> list[Any]:
         searcher = self.searcher_getter(path)
         if searcher is None:
@@ -229,28 +169,28 @@ class PackageLinter(Linter):
                 name = NodeText(node)
                 name = searcher.get_package_name(name)
                 exists = searcher.has_package(name)
-                if callback == self.get_diagnose:
+                range = NodeRange(node)
+                if cls == Diagnostic:
                     if exists:
                         continue
-                    message = "unknown package " + name
-                elif callback == self.get_link:
+                    item = Diagnostic(
+                        range,
+                        "unknown package " + name,
+                        DiagnosticSeverity.Warning,
+                    )
+                elif cls == Diagnostic:
                     if not exists:
                         continue
-                    path = searcher.get_package_url(name)
-                    message = ""
-                elif callback == self.get_hint:
+                    item = DocumentLink(range, searcher.get_package_url(name))
+                elif cls == InlayHint:
                     if not exists:
                         continue
-                    message = searcher.get_package_version(name)
-                    # not installed
-                    if message == "":
+                    version = searcher.get_package_version(name)
+                    if version == "":
                         continue
+                    item = InlayHint(range.end, version, padding_left=True)
                 else:
                     continue
-                range = NodeRange(node)
-                item = callback(
-                    range, message, path, DiagnosticSeverity.Warning
-                )
                 items += [item]
         return items
 
@@ -378,9 +318,9 @@ class SchemaLinter(Linter):
         self,
         tree: Tree,
         path: str,
-        callback: Callable[[Range, str, str, DiagnosticSeverity], Any],
+        cls: type,
     ) -> list[Any]:
-        if callback != self.get_diagnose:
+        if cls != Diagnostic:
             return []
         validator = self.validator_getter(path)
         if validator is None:
@@ -399,8 +339,8 @@ class SchemaLinter(Linter):
 
             def tuple_to_item(tup, error=error):
                 range = NodeRange.from_tuples(tup)
-                item = callback(
-                    range, error.message, path, DiagnosticSeverity.Error
+                item = Diagnostic(
+                    range, error.message, DiagnosticSeverity.Error
                 )
                 return item
 
