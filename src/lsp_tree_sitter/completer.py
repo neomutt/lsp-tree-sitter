@@ -57,7 +57,7 @@ class Completer:
         if results == [] or results[0]["documentation"] is None:
             return None
         content = MarkupContent(**results[0]["documentation"])
-        return Hover(content, NodeRange.from_tuples(args["range"]))
+        return Hover(content, NodeRange.from_tuples(args["nodes"][0]["range"]))
 
     def lookup_help(
         self,
@@ -220,8 +220,8 @@ class PackageCompleter(Completer):
             if document:
                 results += [
                     {
-                        "label": args["text"],
-                        "insert_text": args["text"],
+                        "label": name,
+                        "insert_text": name,
                         "kind": CompletionItemKind.Variable,
                         "documentation": {
                             "kind": MarkupKind.Markdown,
