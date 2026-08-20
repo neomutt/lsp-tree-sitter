@@ -32,7 +32,7 @@ JSON schema to check it.
 
 will convert
 
-```vim
+```zathurarc
 set fontname "Arial"
 set fontsize 12
 ```
@@ -72,9 +72,9 @@ A default value is also allowed:
 
 For:
 
-```vim
-source /etc/a.conf
-source /etc/b.conf
+```zathurarc
+include /etc/a.conf
+include /etc/b.conf
 ```
 
 `schema.scm`:
