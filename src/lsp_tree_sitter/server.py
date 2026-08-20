@@ -49,15 +49,21 @@ if TYPE_CHECKING:
 
 
 class TreeSitterTextDocument(TextDocument):
+    r"""TextDocument for tree sitter."""
+
     def position_to_byte_offset(
         self, position: ServerTextPosition
     ) -> tuple[int, int]:
         r"""Convert a (line, col) position to a byte offset and byte column.
-
-        ``line`` and ``col`` are zero-based and given in UTF-32 code points
-        (Python characters), as returned by pygls' ``PositionCodec``.
         Returns ``(byte_offset, byte_col)`` where ``byte_col`` is the number
         of UTF-8 bytes from the start of ``line`` to ``col``.
+
+        :param self:
+        :param position: ``line`` and ``col`` are zero-based and given in
+            UTF-32 code points (Python characters), as returned by pygls'
+            ``PositionCodec``.
+        :type position: ServerTextPosition
+        :rtype: tuple[int, int]
         """
         # index out of length
         lines = self.source.encode().split(b"\n")
@@ -75,8 +81,13 @@ class TreeSitterTextDocument(TextDocument):
     def compute_tree_edit(
         self, change: TextDocumentContentChangePartial
     ) -> dict:
-        r"""
-        Compute ``Tree.edit()`` kwargs from a LSP incremental content change.
+        r"""Compute ``Tree.edit()`` kwargs from a LSP incremental content
+        change.
+
+        :param self:
+        :param change:
+        :type change: TextDocumentContentChangePartial
+        :rtype: dict
         """
         lines = self.source.splitlines(True)
         range = self.position_codec.range_from_client_units(
@@ -107,8 +118,16 @@ class TreeSitterTextDocument(TextDocument):
 
 
 class TreeSitterLanguageServer(LanguageServer):
+    r"""Languageserver based tree sitter."""
+
     @staticmethod
     def get_name(parser: Parser) -> str:
+        r"""Get name.
+
+        :param parser:
+        :type parser: Parser
+        :rtype: str
+        """
         language = parser.language
         name = language.name or "" if language else ""
         return name
@@ -121,6 +140,19 @@ class TreeSitterLanguageServer(LanguageServer):
         *args,
         **kwargs,
     ) -> None:
+        r"""Init.
+
+        :param self:
+        :param parser:
+        :type parser: Parser
+        :param linters:
+        :type linters: tuple[Linter, ...]
+        :param completers:
+        :type completers: tuple[Completer, ...]
+        :param args:
+        :param kwargs:
+        :rtype: None
+        """
         name = self.get_name(parser)
         super().__init__(name, *args, **kwargs)
         self.parser = parser
@@ -164,7 +196,7 @@ class TreeSitterLanguageServer(LanguageServer):
                     doc.apply_change(change)
             source = doc.source.encode()
 
-            # TypeError: parse() argument 2 must be tree_sitter.Tree, not Non
+            # TypeError: parse() argument 2 must be tree_sitter.Tree, not None
             tree = (
                 self.parser.parse(source, old_tree=tree)
                 if tree
@@ -197,6 +229,13 @@ class TreeSitterLanguageServer(LanguageServer):
         self,
         params: DidOpenTextDocumentParams | DidChangeTextDocumentParams,
     ) -> None:
+        r"""Publish diagnostics.
+
+        :param self:
+        :param params:
+        :type params: DidOpenTextDocumentParams | DidChangeTextDocumentParams
+        :rtype: None
+        """
         uri = params.text_document.uri
         tree = self.trees[uri]
         diagnostics = []
@@ -207,6 +246,13 @@ class TreeSitterLanguageServer(LanguageServer):
         )
 
     def link(self, params: DocumentLinkParams) -> list[DocumentLink]:
+        r"""Get links.
+
+        :param self:
+        :param params:
+        :type params: DocumentLinkParams
+        :rtype: list[DocumentLink]
+        """
         uri = params.text_document.uri
         tree = self.trees[uri]
         links = []
@@ -215,6 +261,13 @@ class TreeSitterLanguageServer(LanguageServer):
         return links
 
     def hint(self, params: InlayHintParams) -> list[InlayHint]:
+        r"""Get inlay hints.
+
+        :param self:
+        :param params:
+        :type params: InlayHintParams
+        :rtype: list[InlayHint]
+        """
         uri = params.text_document.uri
         tree = self.trees[uri]
         hints = []
@@ -223,6 +276,13 @@ class TreeSitterLanguageServer(LanguageServer):
         return hints
 
     def symbol(self, params: DocumentSymbolParams) -> list[DocumentSymbol]:
+        r"""Get symbols.
+
+        :param self:
+        :param params:
+        :type params: DocumentSymbolParams
+        :rtype: list[DocumentSymbol]
+        """
         uri = params.text_document.uri
         tree = self.trees[uri]
         symbols = []
@@ -231,6 +291,13 @@ class TreeSitterLanguageServer(LanguageServer):
         return symbols
 
     def hover(self, params: TextDocumentPositionParams) -> Hover | None:
+        r"""Get a hover.
+
+        :param self:
+        :param params:
+        :type params: TextDocumentPositionParams
+        :rtype: Hover | None
+        """
         uri = params.text_document.uri
         tree = self.trees[uri]
         for completer in self.completers:
@@ -241,6 +308,13 @@ class TreeSitterLanguageServer(LanguageServer):
                 return result
 
     def complete(self, params: CompletionParams) -> CompletionList:
+        r"""Get a completion list.
+
+        :param self:
+        :param params:
+        :type params: CompletionParams
+        :rtype: CompletionList
+        """
         uri = params.text_document.uri
         tree = self.trees[uri]
         items = []
@@ -257,6 +331,19 @@ class TreeSitterLanguageServer(LanguageServer):
         path: str = "",
         complete: bool = False,
     ) -> dict[str, list[MarkupContent]]:
+        r"""Look up documentation.
+
+        :param self:
+        :param texts:
+        :type texts: str
+        :param kind:
+        :type kind: str
+        :param path:
+        :type path: str
+        :param complete:
+        :type complete: bool
+        :rtype: dict[str, list[MarkupContent]]
+        """
         contents: dict[str, list[MarkupContent]] = {}
         for text in texts:
             contents[text] = []
@@ -281,6 +368,13 @@ class TreeSitterLanguageServer(LanguageServer):
         return contents
 
     def lint(self, *files: str) -> dict[str, list[Diagnostic]]:
+        r"""Lint.
+
+        :param self:
+        :param files:
+        :type files: str
+        :rtype: dict[str, list[Diagnostic]]
+        """
         diagnostics: dict[str, list[Diagnostic]] = {}
         for file in files:
             diagnostics[file] = []
@@ -292,6 +386,13 @@ class TreeSitterLanguageServer(LanguageServer):
         return diagnostics
 
     def instantiate(self, *files: str) -> dict[str, list[dict]]:
+        r"""Instantiate files to JSON data.
+
+        :param self:
+        :param files:
+        :type files: str
+        :rtype: dict[str, list[dict]]
+        """
         instances: dict[str, list[dict]] = {}
         for file in files:
             instances[file] = []
@@ -306,6 +407,13 @@ class TreeSitterLanguageServer(LanguageServer):
         return instances
 
     def run(self, args: "Namespace") -> None:
+        r"""Run.
+
+        :param self:
+        :param args:
+        :type args: Namespace
+        :rtype: None
+        """
         match args.color:
             case "always":
                 color = True

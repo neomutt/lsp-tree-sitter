@@ -5,18 +5,26 @@ r"""Misc
 from gzip import decompress
 from pathlib import Path
 from subprocess import check_output
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from urllib import request
 
-from bs4 import BeautifulSoup, FeatureNotFound
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
-from platformdirs import site_data_dir, user_data_dir
 from pygls.uris import uri_scheme
-from pypandoc import convert_text
+
+if TYPE_CHECKING:
+    from bs4 import BeautifulSoup
 
 
 def get_data_paths(appname: str) -> list[Path]:
+    r"""Get data paths.
+
+    :param appname:
+    :type appname: str
+    :rtype: list[Path]
+    """
+    from platformdirs import site_data_dir, user_data_dir
+
     return [
         Path(d)
         for d in site_data_dir(appname, multipath=True).split(":")
@@ -81,25 +89,11 @@ def get_info(filename: str) -> str:
     return text.decode()
 
 
-def html2soup(html: str) -> BeautifulSoup:
-    r"""Html2soup.
-
-    :param html:
-    :type html: str
-    :rtype: BeautifulSoup
-    """
-    try:
-        soup = BeautifulSoup(html, "lxml")
-    except FeatureNotFound:
-        soup = BeautifulSoup(html, "html.parser")
-    return soup
-
-
 def get_soup(
     uri: str,
     converter: Literal["pandoc", "groff"] = "pandoc",
     filetype: str = "man",
-) -> BeautifulSoup:
+) -> "BeautifulSoup":
     r"""Get soup.
 
     pandoc doesn't support mdoc.
@@ -113,19 +107,27 @@ def get_soup(
     :type filetype: str
     :rtype: BeautifulSoup
     """
+    from bs4 import BeautifulSoup, FeatureNotFound
+
     if uri_scheme(uri):
         with request.urlopen(uri) as f:
             html = f.read()
     else:
         text = get_man(uri)
         if converter == "pandoc":
+            from pypandoc import convert_text
+
             html = convert_text(text, "html", filetype)
         else:
             html = check_output(
                 ["groff", "-m", filetype, "-Thtml"],
                 input=text.encode(),
             ).decode()
-    return html2soup(html)
+    try:
+        soup = BeautifulSoup(html, "lxml")
+    except FeatureNotFound:
+        soup = BeautifulSoup(html, "html.parser")
+    return soup
 
 
 def get_md_tokens(filename: str) -> list[Token]:
@@ -135,6 +137,8 @@ def get_md_tokens(filename: str) -> list[Token]:
     :type filename: str
     :rtype: list[Token]
     """
+    from pypandoc import convert_text
+
     md = MarkdownIt("commonmark", {})
     text = get_man(filename)
     return md.parse(convert_text(text, "markdown", "man"))

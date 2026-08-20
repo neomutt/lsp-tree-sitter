@@ -9,7 +9,13 @@ from . import __version__
 
 
 def get_parser(version: str, *args, **kwargs):
-    r"""Get a parser for unit test."""
+    r"""Get a parser for unit test.
+
+    :param version:
+    :type version: str
+    :param args:
+    :param kwargs:
+    """
     parser = ArgumentParser(*args, **kwargs)
     shtab.add_argument_to(parser)
     parser.add_argument("--version", version=version, action="version")
@@ -100,15 +106,21 @@ def get_parser(version: str, *args, **kwargs):
 
 
 def main():
+    r"""Usage:
+    .. code-block: python
+    from lsp_tree_sitter.__main__ import get_parser
+
     parser = get_parser(__version__)
     args = parser.parse_args()
 
-    r"""
     from .server import XXXLanguageServer as Server
 
     server = Server(version=__version__)
     server.run(args)
     """
+    parser = get_parser(__version__)
+    args = parser.parse_args()
+
     print(args)
 
 

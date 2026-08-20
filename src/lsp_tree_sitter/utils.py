@@ -2,6 +2,14 @@ import os
 
 
 def pygmentize(text: str, filetype: str) -> None:
+    r"""Use Pygments to highlight.
+
+    :param text: text to highlight
+    :type text: str
+    :param filetype: filetype to highlight
+    :type filetype: str
+    :rtype: None
+    """
     TERM = os.getenv("TERM", "xterm")
     try:
         from pygments import highlight
@@ -27,6 +35,17 @@ def pygmentize(text: str, filetype: str) -> None:
 def pprint(
     obj, filetype: str = "json", color: bool = True, *args, **kwargs
 ) -> None:
+    r"""Pretty print.
+
+    :param obj:
+    :param filetype: any filetype except yaml, toml, json will be plaintext
+    :type filetype: str
+    :param color: whether to use color
+    :type color: bool
+    :param args:
+    :param kwargs:
+    :rtype: None
+    """
     match filetype:
         case "yaml":
             from yaml import dump as dumps

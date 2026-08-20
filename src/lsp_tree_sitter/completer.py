@@ -28,9 +28,22 @@ from .node import NodeDict, NodeOps, NodeRange, PackageSearcher
 
 @dataclass
 class Completer:
+    r"""Completer."""
+
     def complete(
         self, tree: Tree, position: Position, path: str
     ) -> CompletionList:
+        r"""Complete.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param position:
+        :type position: Position
+        :param path:
+        :type path: str
+        :rtype: CompletionList
+        """
         point = Point(position.line, position.character - 1)
         node = tree.root_node.descendant_for_point_range(point, point)
         args = self.args_callback(node, point)
@@ -50,6 +63,17 @@ class Completer:
         return CompletionList(items == [], items)
 
     def hover(self, tree: Tree, position: Position, path: str) -> Hover | None:
+        r"""Hover.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param position:
+        :type position: Position
+        :param path:
+        :type path: str
+        :rtype: Hover | None
+        """
         point = Point(position.line, position.character)
         node = tree.root_node.descendant_for_point_range(point, point)
         args = self.args_callback(node, point)
@@ -66,6 +90,18 @@ class Completer:
         path: str = "",
         **kwargs,
     ) -> MarkupContent | None:
+        r"""Lookup help.
+
+        :param self:
+        :param type:
+        :type type: str
+        :param text:
+        :type text: str
+        :param path:
+        :type path: str
+        :param kwargs:
+        :rtype: MarkupContent | None
+        """
         args = self.args_callback(None, Point(-1, -1))
         args["nodes"][0]["type"] = type
         args["nodes"][0]["text"] = text
@@ -82,6 +118,18 @@ class Completer:
         path: str = "",
         **kwargs,
     ) -> list[CompletionItem]:
+        r"""Lookup complete.
+
+        :param self:
+        :param type:
+        :type type: str
+        :param text:
+        :type text: str
+        :param path:
+        :type path: str
+        :param kwargs:
+        :rtype: list[CompletionItem]
+        """
         args = self.args_callback(None, Point(-1, -1))
         args["nodes"][0]["type"] = type
         args["nodes"][0]["text"] = text
@@ -103,6 +151,14 @@ class Completer:
 
     @staticmethod
     def args_callback(node: Node | None, point: Point) -> dict[str, Any]:
+        r"""Args callback.
+
+        :param node:
+        :type node: Node | None
+        :param point:
+        :type point: Point
+        :rtype: dict[str, Any]
+        """
         return {
             "nodes": [NodeDict.from_node(node)],
             "cursor": tuple(point),
@@ -122,11 +178,24 @@ class Completer:
     def __call__(
         self, args: dict[str, Any], path: str, node: Node | None = None
     ) -> list[dict[str, Any]]:
+        r"""complete, hover call it.
+
+        :param self:
+        :param args:
+        :type args: dict[str, Any]
+        :param path:
+        :type path: str
+        :param node:
+        :type node: Node | None
+        :rtype: list[dict[str, Any]]
+        """
         raise NotImplementedError
 
 
 @dataclass
 class PathCompleter(Completer):
+    r"""Path completer."""
+
     kind: str = "path"
     filetypes: dict[str, str] = field(default_factory=lambda: {"*": "text"})
     regex: re.Pattern = field(
@@ -136,6 +205,17 @@ class PathCompleter(Completer):
     def __call__(
         self, args: dict[str, Any], path: str, node: Node | None = None
     ) -> list[dict[str, Any]]:
+        r"""complete, hover call it.
+
+        :param self:
+        :param args:
+        :type args: dict[str, Any]
+        :param path:
+        :type path: str
+        :param node:
+        :type node: Node | None
+        :rtype: list[dict[str, Any]]
+        """
         if args["nodes"][0]["type"] != self.kind:
             return []
         root_dir = os.path.dirname(path)
@@ -191,6 +271,17 @@ class PackageCompleter(Completer):
     def __call__(
         self, args: dict[str, Any], path: str, node: Node | None = None
     ) -> list[dict[str, Any]]:
+        r"""complete, hover call it.
+
+        :param self:
+        :param args:
+        :type args: dict[str, Any]
+        :param path:
+        :type path: str
+        :param node:
+        :type node: Node | None
+        :rtype: list[dict[str, Any]]
+        """
         searcher = self.searcher_getter(path)
         # node is None when lookup
         if searcher is None or (node and not searcher(node)):
@@ -234,6 +325,8 @@ class PackageCompleter(Completer):
 
 @dataclass
 class SchemaCompleter(Completer):
+    r"""Schema completer."""
+
     code: str
     schema_getter: Callable[[str], Any]
 
@@ -245,6 +338,17 @@ class SchemaCompleter(Completer):
         *args,
         **kwargs,
     ) -> "SchemaCompleter":
+        r"""Factory function from files.
+
+        :param cls:
+        :param code_file:
+        :type code_file: str
+        :param schema_getter:
+        :type schema_getter: str | Callable[[str], Any]
+        :param args:
+        :param kwargs:
+        :rtype: SchemaCompleter
+        """
         with open(code_file) as f:
             code = f.read()
         if isinstance(schema_getter, str):
@@ -260,6 +364,16 @@ class SchemaCompleter(Completer):
     def query(
         code: str, args: dict[str, Any], schema: dict
     ) -> list[dict[str, Any]]:
+        r"""Query.
+
+        :param code:
+        :type code: str
+        :param args:
+        :type args: dict[str, Any]
+        :param schema:
+        :type schema: dict
+        :rtype: list[dict[str, Any]]
+        """
         program = jq.compile(code, args=args)
         output = program.input_value(schema)
         results = []
@@ -273,6 +387,17 @@ class SchemaCompleter(Completer):
     def __call__(
         self, args: dict[str, Any], path: str, node: Node | None = None
     ) -> list[dict[str, Any]]:
+        r"""complete, hover call it.
+
+        :param self:
+        :param args:
+        :type args: dict[str, Any]
+        :param path:
+        :type path: str
+        :param node:
+        :type node: Node | None
+        :rtype: list[dict[str, Any]]
+        """
         schema = self.schema_getter(path)
         if schema is None:
             return []
@@ -286,6 +411,14 @@ class ValueCompleter(SchemaCompleter):
     selectors: tuple[str, ...] = ("-",)
 
     def args_callback(self, node: Node | None, point: Point) -> dict[str, Any]:
+        r"""Args callback.
+
+        :param node:
+        :type node: Node | None
+        :param point:
+        :type point: Point
+        :rtype: dict[str, Any]
+        """
         args = super().args_callback(node, point)
         for selector in self.selectors:
             node = NodeOps.from_str(selector)(node)

@@ -31,30 +31,83 @@ from .node import NodeRange, NodeText, NodeTuples, PackageSearcher
 
 @dataclass
 class LinterBase:
+    r"""Linter base."""
+
     def diagnose(self, tree: Tree, path: str) -> list[Diagnostic]:
+        r"""Get diagnostics.
+
+        :param tree:
+        :type tree: Tree
+        :param path:
+        :type path: str
+        :rtype: list[Diagnostic]
+        """
         return []
 
     def link(self, tree: Tree, path: str) -> list[DocumentLink]:
+        r"""Get links.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param path:
+        :type path: str
+        :rtype: list[DocumentLink]
+        """
         return []
 
     def hint(self, tree: Tree, path: str) -> list[InlayHint]:
+        r"""Get inlay hints.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param path:
+        :type path: str
+        :rtype: list[InlayHint]
+        """
         return []
 
     def symbol(self, tree: Tree, path: str) -> list[DocumentSymbol]:
+        r"""Get symbols.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param path:
+        :type path: str
+        :rtype: list[DocumentSymbol]
+        """
         return []
 
 
 @dataclass
 class Linter(LinterBase):
+    r"""Linter."""
+
     query: Query
 
     def __post_init__(self):
+        r"""Post init.
+
+        :param self:
+        """
         self.cursor = QueryCursor(self.query)
 
     @staticmethod
     def queries_to_query(
         language: Language, queries: ModuleType, name: str
     ) -> Query:
+        r"""Queries to query.
+
+        :param language:
+        :type language: Language
+        :param queries:
+        :type queries: ModuleType
+        :param name:
+        :type name: str
+        :rtype: Query
+        """
         paths: list[str] = queries.__path__._path  # ty:ignore[unresolved-attribute]
         query_file = os.path.join(paths[0], name)
         with open(query_file) as f:
@@ -68,18 +121,65 @@ class Linter(LinterBase):
         path: str,
         cls: type,
     ) -> list[Any]:
+        r"""diagnose, link, hint, symbol call it.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param path:
+        :type path: str
+        :param cls:
+        :type cls: type
+        :rtype: list[Any]
+        """
         raise NotImplementedError
 
     def diagnose(self, tree: Tree, path: str) -> list[Diagnostic]:
+        r"""Get diagnostics.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param path:
+        :type path: str
+        :rtype: list[Diagnostic]
+        """
         return self(tree, path, Diagnostic)
 
     def link(self, tree: Tree, path: str) -> list[DocumentLink]:
+        r"""Get links.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param path:
+        :type path: str
+        :rtype: list[DocumentLink]
+        """
         return self(tree, path, DocumentLink)
 
     def hint(self, tree: Tree, path: str) -> list[InlayHint]:
+        r"""Get inlay hints.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param path:
+        :type path: str
+        :rtype: list[InlayHint]
+        """
         return self(tree, path, InlayHint)
 
     def symbol(self, tree: Tree, path: str) -> list[DocumentSymbol]:
+        r"""Get symbols.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param path:
+        :type path: str
+        :rtype: list[DocumentSymbol]
+        """
         return self(tree, path, DocumentSymbol)
 
 
@@ -95,6 +195,17 @@ class PathLinter(Linter):
     def from_queries(
         cls, language: Language, queries: ModuleType, *args, **kwargs
     ) -> "PathLinter":
+        r"""Factory function from queries.
+
+        :param cls:
+        :param language:
+        :type language: Language
+        :param queries:
+        :type queries: ModuleType
+        :param args:
+        :param kwargs:
+        :rtype: PathLinter
+        """
         query = cls.queries_to_query(language, queries, "highlights.scm")
         return cls(query, *args, **kwargs)
 
@@ -104,6 +215,17 @@ class PathLinter(Linter):
         path: str,
         cls: type,
     ) -> list[Any]:
+        r"""diagnose, link, hint, symbol call it.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param path:
+        :type path: str
+        :param cls:
+        :type cls: type
+        :rtype: list[Any]
+        """
         captures = self.cursor.captures(tree.root_node)
         items = []
         dirname = os.path.dirname(path)
@@ -118,7 +240,7 @@ class PathLinter(Linter):
                     text = os.path.expandvars(text)
                 filepath = os.path.join(dirname, text)
                 exist = os.path.exists(filepath)
-                range = NodeRange(node)
+                range = NodeRange.from_node(node)
                 if cls == Diagnostic:
                     if exist:
                         continue
@@ -139,12 +261,25 @@ class PathLinter(Linter):
 
 @dataclass
 class PackageLinter(Linter):
+    r"""Package linter."""
+
     searcher_getter: Callable[[str], PackageSearcher | None]
 
     @classmethod
     def from_queries(
         cls, language: Language, queries: ModuleType, *args, **kwargs
     ) -> "PackageLinter":
+        r"""Factory function from queries.
+
+        :param cls:
+        :param language:
+        :type language: Language
+        :param queries:
+        :type queries: ModuleType
+        :param args:
+        :param kwargs:
+        :rtype: PackageLinter
+        """
         query = cls.queries_to_query(language, queries, "packages.scm")
         return cls(query, *args, **kwargs)
 
@@ -154,6 +289,17 @@ class PackageLinter(Linter):
         path: str,
         cls: type,
     ) -> list[Any]:
+        r"""diagnose, link, hint, symbol call it.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param path:
+        :type path: str
+        :param cls:
+        :type cls: type
+        :rtype: list[Any]
+        """
         searcher = self.searcher_getter(path)
         if searcher is None:
             return []
@@ -169,7 +315,7 @@ class PackageLinter(Linter):
                 name = NodeText(node)
                 name = searcher.get_package_name(name)
                 exists = searcher.has_package(name)
-                range = NodeRange(node)
+                range = NodeRange.from_node(node)
                 if cls == Diagnostic:
                     if exists:
                         continue
@@ -200,6 +346,12 @@ class Args(dict[str, str]):
 
     @staticmethod
     def get_obj_type(scope: str) -> Callable[[str], Any]:
+        r"""Get obj type.
+
+        :param scope:
+        :type scope: str
+        :rtype: Callable[[str], Any]
+        """
         match scope:
             case "integer":
                 obj_type = int
@@ -226,6 +378,16 @@ class Args(dict[str, str]):
         lens: dict[str, int],
         instance,
     ) -> tuple[str, Callable[[str], Any]]:
+        r"""Parse key.
+
+        :param self:
+        :param key:
+        :type key: str
+        :param lens:
+        :type lens: dict[str, int]
+        :param instance:
+        :rtype: tuple[str, Callable[[str], Any]]
+        """
         code = "."
         scopes = key.split(".")
         obj_type = str
@@ -246,19 +408,50 @@ class Args(dict[str, str]):
         return code, obj_type
 
     def get_by_code(self, instance, code: str):
+        r"""Get by code.
+
+        :param self:
+        :param instance:
+        :param code:
+        :type code: str
+        """
         program = jq.compile(code, args=self)
         result = program.input_value(instance).first()
         return result
 
     def get_len_by_code(self, instance, code: str) -> int:
+        r"""Get len by code.
+
+        :param self:
+        :param instance:
+        :param code:
+        :type code: str
+        :rtype: int
+        """
         result = self.get_by_code(instance, code)
         return len(result) if isinstance(result, list) else 0
 
     def has_by_code(self, instance, code: str) -> bool:
+        r"""Has by code.
+
+        :param self:
+        :param instance:
+        :param code:
+        :type code: str
+        :rtype: bool
+        """
         result = self.get_by_code(instance, code)
         return result is not None
 
     def set_by_code(self, result, code: str, obj):
+        r"""Set by code.
+
+        :param self:
+        :param result:
+        :param code:
+        :type code: str
+        :param obj:
+        """
         program = jq.compile(code + f" = {json.dumps(obj)}", args=self)
         result = program.input_value(result).first()
         return result
@@ -266,6 +459,8 @@ class Args(dict[str, str]):
 
 @dataclass
 class SchemaLinter(Linter):
+    r"""Schema linter."""
+
     validator_getter: Callable[[str], Validator | None]
     regex: re.Pattern = field(
         default_factory=lambda: re.compile(r"\('([^']+)' was unexpected\)")
@@ -278,6 +473,17 @@ class SchemaLinter(Linter):
         queries: ModuleType,
         schema_getter: str | Callable[[str], Any],
     ) -> "SchemaLinter":
+        r"""Factory function from queries.
+
+        :param cls:
+        :param language:
+        :type language: Language
+        :param queries:
+        :type queries: ModuleType
+        :param schema_getter:
+        :type schema_getter: str | Callable[[str], Any]
+        :rtype: SchemaLinter
+        """
         query = cls.queries_to_query(language, queries, "schema.scm")
 
         if isinstance(schema_getter, str):
@@ -293,6 +499,16 @@ class SchemaLinter(Linter):
     def from_schema(
         cls, query: Query, schema_getter: Callable[[str], Any]
     ) -> "SchemaLinter":
+        r"""From schema.
+
+        :param cls:
+        :param query:
+        :type query: Query
+        :param schema_getter:
+        :type schema_getter: Callable[[str], Any]
+        :rtype: SchemaLinter
+        """
+
         def validator_getter(path: str) -> Validator | None:
             schema = schema_getter(path)
             return validator_for(schema)(schema) if schema else None
@@ -301,6 +517,11 @@ class SchemaLinter(Linter):
 
     @staticmethod
     def tuple_is_range(tup) -> bool:
+        r"""Judge if the tuple is a range.
+
+        :param tup:
+        :rtype: bool
+        """
         return (
             isinstance(tup, list)
             and len(tup) == 2
@@ -320,6 +541,17 @@ class SchemaLinter(Linter):
         path: str,
         cls: type,
     ) -> list[Any]:
+        r"""diagnose, link, hint, symbol call it.
+
+        :param self:
+        :param tree:
+        :type tree: Tree
+        :param path:
+        :type path: str
+        :param cls:
+        :type cls: type
+        :rtype: list[Any]
+        """
         if cls != Diagnostic:
             return []
         validator = self.validator_getter(path)
@@ -375,6 +607,12 @@ class SchemaLinter(Linter):
 
     @staticmethod
     def get_duplications(arr: list) -> list[int]:
+        r"""Get duplications.
+
+        :param arr:
+        :type arr: list
+        :rtype: list[int]
+        """
         seen = {}
         duplicates = set()
 
@@ -390,6 +628,12 @@ class SchemaLinter(Linter):
     def process_settings(
         settings: dict[str, str | None],
     ) -> tuple[dict[str, str], dict[str, str]]:
+        r"""Process settings.
+
+        :param settings:
+        :type settings: dict[str, str | None]
+        :rtype: tuple[dict[str, str], dict[str, str]]
+        """
         args: dict[str, str] = {}
         values: dict[str, str] = {}
         for key, value in settings.items():
@@ -404,7 +648,14 @@ class SchemaLinter(Linter):
         matches: list[tuple[int, dict[str, list[Node]]]],
         callback: Callable[[Node], Any],
     ):
-        r"""Get a JSON instance for JSON schema validation."""
+        r"""Get a JSON instance for JSON schema validation.
+
+        :param self:
+        :param matches:
+        :type matches: list[tuple[int, dict[str, list[Node]]]]
+        :param callback:
+        :type callback: Callable[[Node], Any]
+        """
         instance = {}
         for i, match in matches:
             # build args

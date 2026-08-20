@@ -7,6 +7,6 @@ r"""{{ name.replace("_", " ").strip().capitalize() }}.
 {% endif -%}
 {% endfor -%}
 {% if return_type -%}
-:rtype: {{ return_type }}
+:rtype: {{ return_type.strip('"') }}
 {% endif -%}
 """
