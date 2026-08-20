@@ -1,35 +1,57 @@
 import os
 
 
-def pygmentize(text: str, filetype: str) -> None:
-    r"""Use Pygments to highlight.
+def ts_highlight(text: str, filetype: str) -> str | None:
+    r"""Use tree sitter to highlight.
+
+    :param text:
+    :type text: str
+    :param filetype:
+    :type filetype: str
+    :rtype: str | None
+    """
+    from tree_sitter_highlight import highlight, search_parsers
+
+    match filetype:
+        case "yaml":
+            import tree_sitter_yaml as module
+        case "toml":
+            import tree_sitter_toml as module
+        case "json":
+            import tree_sitter_json as module
+        case _:
+            return
+    parsers = search_parsers(module)
+    code = highlight(
+        source=text, parsers=parsers, language=filetype, format="terminal"
+    )
+    return code
+
+
+def pygmentize(text: str, filetype: str) -> str | None:
+    r"""Use pygments to highlight.
 
     :param text: text to highlight
     :type text: str
     :param filetype: filetype to highlight
     :type filetype: str
-    :rtype: None
+    :rtype: str | None
     """
-    TERM = os.getenv("TERM", "xterm")
-    try:
-        from pygments import highlight
-        from pygments.formatters import get_formatter_by_name
-        from pygments.lexers import get_lexer_by_name
+    from pygments import highlight
+    from pygments.formatters import get_formatter_by_name
+    from pygments.lexers import get_lexer_by_name
 
-        if TERM.split("-")[-1] == "256color":
-            formatter_name = "terminal256"
-        elif TERM != "dumb":
-            formatter_name = "terminal"
-        else:
-            formatter_name = None
-        if formatter_name:
-            formatter = get_formatter_by_name(formatter_name)
-            lexer = get_lexer_by_name(filetype)
-            print(highlight(text, lexer, formatter), end="")
-    except ImportError:
-        TERM = "dumb"
-    if TERM == "dumb":
-        print(text)
+    TERM = os.getenv("TERM", "xterm")
+    if TERM.split("-")[-1] == "256color":
+        formatter_name = "terminal256"
+    elif TERM != "dumb":
+        formatter_name = "terminal"
+    else:
+        formatter_name = None
+    if formatter_name:
+        formatter = get_formatter_by_name(formatter_name)
+        lexer = get_lexer_by_name(filetype)
+        return highlight(text, lexer, formatter)
 
 
 def pprint(
@@ -57,6 +79,16 @@ def pprint(
             dumps = str
     text = dumps(obj, *args, **kwargs)
     if color:
-        pygmentize(text, filetype)
+        try:
+            code = ts_highlight(text, filetype)
+        except ImportError:
+            try:
+                code = pygmentize(text, filetype)
+            except ImportError:
+                code = None
+    else:
+        code = None
+    if code:
+        print(code, end="")
     else:
         print(text)
