@@ -111,7 +111,7 @@ command = "XXX-language-server"
 
 ## [Visual Studio Code](https://code.visualstudio.com/)
 
-### [vscode-glspc](https://gitlab.com/ruilvo/vscode-glspc)
+### [vscode-glspc](https://marketplace.visualstudio.com/items?itemName=zsol.vscode-glspc)
 
 `~/.config/Code/User/settings.json`:
 
