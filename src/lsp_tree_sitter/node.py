@@ -246,6 +246,9 @@ class PackageSearcher(NodeFilter):
         :rtype: str
         """
         name = split(name)[0]
-        for sep in ":><=!":
+        # version: >, <, =, !=, ~, ^
+        # PKGBUILD: pkgname:epoch
+        # ebuild: DEPEND[USE]
+        for sep in "><=!~^:[":
             name = name.partition(sep)[0]
         return name.strip()

@@ -324,7 +324,7 @@ class PackageLinter(Linter):
                         "unknown package " + name,
                         DiagnosticSeverity.Warning,
                     )
-                elif cls == Diagnostic:
+                elif cls == DocumentLink:
                     if not exists:
                         continue
                     item = DocumentLink(range, searcher.get_package_url(name))
