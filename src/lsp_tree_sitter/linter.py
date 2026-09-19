@@ -597,7 +597,7 @@ class SchemaLinter(Linter):
                     for key in self.regex.findall(error.message):
                         items += [tuple_to_item(tup[key])]
                 elif error.message.endswith(" is a required property"):
-                    items += [tuple_to_item(tup[0])]
+                    items += [tuple_to_item([[0, 0], [0, 0]])]
                 else:
                     for child in tup.values():
                         items += [tuple_to_item(child)]
