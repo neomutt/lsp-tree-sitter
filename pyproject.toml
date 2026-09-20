@@ -45,7 +45,6 @@ docs = [
 misc = [
   "beautifulsoup4>=4.15.0",
   "markdown-it-py>=3.0.0",
-  "platformdirs>=4.10.1",
   "pypandoc>=1.17",
 ]
 pygments = [

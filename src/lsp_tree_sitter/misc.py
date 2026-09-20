@@ -2,6 +2,7 @@ r"""Misc
 ========
 """
 
+import os
 from gzip import decompress
 from pathlib import Path
 from subprocess import check_output
@@ -23,13 +24,14 @@ def get_data_paths(appname: str) -> list[Path]:
     :type appname: str
     :rtype: list[Path]
     """
-    from platformdirs import site_data_dir, user_data_dir
-
-    return [
-        Path(d)
-        for d in site_data_dir(appname, multipath=True).split(":")
-        + [user_data_dir(appname)]
-    ]
+    dirs = os.getenv(f"{appname.upper()}_PATH", "").split(":")
+    for dir in os.getenv("PATH", "").split(":"):
+        dir = os.path.dirname(dir)
+        dirs += [
+            os.path.join(dir, "share", appname),
+            os.path.join(dir, appname),
+        ]
+    return [Path(dir) for dir in dirs]
 
 
 def get_man(filename: str) -> str:
