@@ -16,40 +16,25 @@ permissions:
   id-token: write
 
 jobs:
-  # test:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: astral-sh/setup-uv@v8.3.2
-  #     - name: Install dependencies
-  #       run: |
-  #         uv sync --extra=dev
-  #     - name: Test
-  #       run: |
-  #         source .venv/bin/activate
-  #         pytest --cov
-  #     - uses: codecov/codecov-action@v4
 
   build:
-    # needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v8.3.2
+      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: actions/checkout@v7
       - name: Build
         run: |
           uv build
       - uses: pypa/gh-action-pypi-publish@release/v1
-        if: runner.os == 'Linux' && startsWith(github.ref, 'refs/tags/')
-      - uses: actions/upload-artifact@v4
-        if: runner.os == 'Linux' && ! startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
+      - uses: actions/upload-artifact@v7
+        if: "! startsWith(github.ref, 'refs/tags/')"
         with:
           path: |
             dist/*
-      - uses: softprops/action-gh-release@v2
-        if: runner.os == 'Linux' && startsWith(github.ref, 'refs/tags/')
+      - uses: softprops/action-gh-release@v3
+        if: startsWith(github.ref, 'refs/tags/')
         with:
-          # body_path: build/CHANGELOG.md
           files: |
             dist/*
 
