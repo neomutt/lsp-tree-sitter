@@ -53,17 +53,18 @@ class TreeSitterTextDocument(TextDocument):
 
     def position_to_byte_offset(
         self, position: ServerTextPosition
-    ) -> tuple[int, int]:
-        r"""Convert a (line, col) position to a byte offset and byte column.
-        Returns ``(byte_offset, byte_col)`` where ``byte_col`` is the number
-        of UTF-8 bytes from the start of ``line`` to ``col``.
+    ) -> tuple[int, tuple[int, int]]:
+        r"""Convert a (line, col) position to a byte offset and a point.
+
+        Returns ``(byte_offset, (row, byte_col))``, where ``byte_col`` is the
+        number of UTF-8 bytes from the start of ``row`` to ``byte_offset``.
 
         :param self:
         :param position: ``line`` and ``col`` are zero-based and given in
             UTF-32 code points (Python characters), as returned by pygls'
             ``PositionCodec``.
         :type position: ServerTextPosition
-        :rtype: tuple[int, int]
+        :rtype: tuple[int, tuple[int, int]]
         """
         # index out of length
         lines = self.source.encode().split(b"\n")
@@ -71,12 +72,12 @@ class TreeSitterTextDocument(TextDocument):
             len(lines[i]) + 1 for i in range(min(position.line, len(lines)))
         )
         if position.line >= len(lines):
-            return line_start, 0
+            return line_start, (position.line, 0)
         line_str = lines[position.line].decode()
         byte_col = len(
             line_str[: min(position.character, len(line_str))].encode()
         )
-        return line_start + byte_col, byte_col
+        return line_start + byte_col, (position.line, byte_col)
 
     def compute_tree_edit(
         self, change: TextDocumentContentChangePartial
@@ -94,16 +95,16 @@ class TreeSitterTextDocument(TextDocument):
             lines, change.range
         )
 
-        start_byte, start_bcol = self.position_to_byte_offset(range.start)
-        old_end_byte, old_end_bcol = self.position_to_byte_offset(range.end)
+        start_byte, start_point = self.position_to_byte_offset(range.start)
+        old_end_byte, old_end_point = self.position_to_byte_offset(range.end)
 
         bytes_len = len(change.text.encode())
         new_text_lines = change.text.split("\n")
 
         new_end_byte = start_byte + bytes_len
-        new_end_line = range.start.line + len(new_text_lines) - 1
+        new_end_line = start_point[0] + len(new_text_lines) - 1
         if len(new_text_lines) == 1:
-            new_end_bcol = start_bcol + bytes_len
+            new_end_bcol = start_point[1] + bytes_len
         else:
             new_end_bcol = len(new_text_lines[-1].encode())
 
@@ -125,8 +126,8 @@ class TreeSitterTextDocument(TextDocument):
             start_byte=start_byte,
             old_end_byte=old_end_byte,
             new_end_byte=new_end_byte,
-            start_point=(range.start.line, start_bcol),
-            old_end_point=(range.end.line, old_end_bcol),
+            start_point=start_point,
+            old_end_point=old_end_point,
             new_end_point=(new_end_line, new_end_bcol),
         )
 
