@@ -66,18 +66,17 @@ class TreeSitterTextDocument(TextDocument):
         :type position: ServerTextPosition
         :rtype: tuple[int, tuple[int, int]]
         """
-        # index out of length
-        lines = self.source.encode().split(b"\n")
-        line_start = sum(
-            len(lines[i]) + 1 for i in range(min(position.line, len(lines)))
+        if not self.lines:
+            return 0, (0, 0)
+        offset = self.offset_at_server_position(position)
+        normalized = self.server_position_at_offset(offset)
+        line = (
+            self.lines[normalized.line]
+            if normalized.line < len(self.lines)
+            else ""
         )
-        if position.line >= len(lines):
-            return line_start, (position.line, 0)
-        line_str = lines[position.line].decode()
-        byte_col = len(
-            line_str[: min(position.character, len(line_str))].encode()
-        )
-        return line_start + byte_col, (position.line, byte_col)
+        byte_col = len(line[: normalized.character].encode())
+        return len(self.source[:offset].encode()), (normalized.line, byte_col)
 
     def compute_tree_edit(
         self, change: TextDocumentContentChangePartial
