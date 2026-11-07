@@ -107,6 +107,20 @@ class TreeSitterTextDocument(TextDocument):
         else:
             new_end_bcol = len(new_text_lines[-1].encode())
 
+        old_len = len(self.source.encode())
+        if not 0 <= start_byte <= old_end_byte <= old_len:
+            raise ValueError(
+                f"Tree edit of {self.uri} reaches outside the document: "
+                f"bytes {start_byte}..{old_end_byte} not in 0..{old_len}, "
+                f"client range {change.range}, text {change.text!r}"
+            )
+        if range.start > range.end:
+            raise ValueError(
+                f"Tree edit of {self.uri} is inverted: "
+                f"{range.start} > {range.end}, "
+                f"client range {change.range}, text {change.text!r}"
+            )
+
         return dict(
             start_byte=start_byte,
             old_end_byte=old_end_byte,
